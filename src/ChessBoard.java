@@ -4,15 +4,15 @@ import java.awt.*;
 public class ChessBoard extends JFrame {
     private static final int BOARD_SIZE = 8; // Standard chessboard is 8x8
 
-    public ChessBoard() {
+    public ChessBoard(int[] dims, Color color) {
         setTitle("Chess Board");
-        setSize(600, 600);
+        setSize(dims[0], dims[1]);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JPanel boardPanel = new JPanel();
         boardPanel.setLayout(new BorderLayout());
 
-        JPanel gridPanel = getJPanel();
+        JPanel gridPanel = getJPanel(color);
 
         // Add row labels on the left
         JPanel rowLabels = new JPanel(new GridLayout(BOARD_SIZE, 1));
@@ -37,7 +37,7 @@ public class ChessBoard extends JFrame {
         add(boardPanel);
     }
 
-    private static JPanel getJPanel() {
+    private static JPanel getJPanel(Color color) {
         JPanel gridPanel = new JPanel(new GridLayout(BOARD_SIZE, BOARD_SIZE));
         gridPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
@@ -48,7 +48,7 @@ public class ChessBoard extends JFrame {
                 if ((i + j) % 2 == 0) {
                     square.setBackground(Color.WHITE);
                 } else {
-                    square.setBackground(Color.GRAY);
+                    square.setBackground(color);
                 }
                 gridPanel.add(square);
             }
@@ -58,7 +58,7 @@ public class ChessBoard extends JFrame {
 
     public static void main(String[] args) {
         EventQueue.invokeLater(() -> {
-            ChessBoard chessBoard = new ChessBoard();
+            ChessBoard chessBoard = new ChessBoard(new int[]{800,800}, Color.BLUE);
             chessBoard.setVisible(true);
         });
     }
