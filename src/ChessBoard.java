@@ -638,7 +638,7 @@ class Rook extends Piece {
             // Check if the path is clear
             int colStep = (toCol - fromCol) / colDiff;
             for (int i = 1; i < colDiff; i++) {
-                if (board[toRow][fromRow + i * colStep] != null) {
+                if (board[toRow][fromCol + i * colStep] != null) {
                     return false;
                 }
             }
@@ -721,7 +721,7 @@ class Queen extends Piece {
             // Check if the path is clear
             int colStep = (toCol - fromCol) / colDiff;
             for (int i = 1; i < colDiff; i++) {
-                if (board[toRow][fromRow + i * colStep] != null) {
+                if (board[toRow][fromCol + i * colStep] != null) {
                     return false;
                 }
             }
