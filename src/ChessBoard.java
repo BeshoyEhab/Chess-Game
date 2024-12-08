@@ -606,7 +606,7 @@ class Pawn extends Piece {
 
         if ((toCol == fromCol && board[toRow][toCol] == null && toRow - fromRow == direction) //Common move
                 || (board[toRow][toCol] != null && toRow - fromRow == direction && Math.abs(toCol - fromCol) == 1) //Eating the piece
-                || (!this.haveMove && board[fromRow+direction][toCol] == null && board[fromRow+2*direction][toCol] == null && toRow - fromRow == 2*direction)) //First move only in pawn can be 2 steps
+                || (!this.haveMove && board[fromRow+direction][toCol] == null && board[fromRow+2*direction][toCol] == null && toRow - fromRow == 2*direction && fromCol == toCol)) //First move only in pawn can be 2 steps
         {
             return true;
         }
