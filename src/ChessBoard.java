@@ -59,7 +59,7 @@ public class ChessBoard extends JFrame {
 
     private JPanel getSquare(int i, int j) {
         JPanel square = new JPanel(new BorderLayout());
-        square.setBackground((i + j) % 2 == 0 ? this.color : Color.WHITE);
+        square.setBackground((i + j) % 2 == 0 ? Color.WHITE : this.color);
         // Capture variables for listener
 
         // Add piece icon if present
@@ -274,8 +274,8 @@ abstract class Piece {
         board[0][0] = new Rook("Black", basePath + "BRook.png");
         board[0][1] = new Knight("Black", basePath + "BKnight.png");
         board[0][2] = new Bishop("Black", basePath + "BBishop.png");
-        board[0][3] = new King("Black", basePath + "BKing.png");
-        board[0][4] = new Queen("Black", basePath + "BQueen.png");
+        board[0][3] = new Queen("Black", basePath + "BQueen.png");
+        board[0][4] = new King("Black", basePath + "BKing.png");
         board[0][5] = new Bishop("Black", basePath + "BBishop.png");
         board[0][6] = new Knight("Black", basePath + "BKnight.png");
         board[0][7] = new Rook("Black", basePath + "BRook.png");
@@ -286,8 +286,8 @@ abstract class Piece {
         board[7][0] = new Rook("White", basePath + "WRook.png");
         board[7][1] = new Knight("White", basePath + "WKnight.png");
         board[7][2] = new Bishop("White", basePath + "WBishop.png");
-        board[7][3] = new King("White", basePath + "WKing.png");
-        board[7][4] = new Queen("White", basePath + "WQueen.png");
+        board[7][3] = new Queen("White", basePath + "WQueen.png");
+        board[7][4] = new King("White", basePath + "WKing.png");
         board[7][5] = new Bishop("White", basePath + "WBishop.png");
         board[7][6] = new Knight("White", basePath + "WKnight.png");
         board[7][7] = new Rook("White", basePath + "WRook.png");
