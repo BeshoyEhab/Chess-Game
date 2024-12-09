@@ -79,16 +79,6 @@ public class ChessBoard extends JFrame {
         return square;
     }
 
-    private void addDot(int row, int col) {
-        JPanel square = squares[row][col];
-
-        square.setLayout(new BorderLayout());
-        Dot dot = new Dot((dims[0]-20)/8-20, (dims[1]-20)/8-20, calculateMidColor(this.color));
-
-        // Add the dot to the center of the square
-        square.add(dot, BorderLayout.CENTER);
-    }
-
     private void addDot(int row, int col, Color color) {
         JPanel square = squares[row][col];
 
@@ -146,7 +136,7 @@ public class ChessBoard extends JFrame {
                     for (int i = 0; i < BOARD_SIZE; i++) {
                         for (int j = 0; j < BOARD_SIZE; j++) {
                             if (selectedPiece.canMove(selectedRow, selectedCol, i, j, boardState) && (boardState[i][j] == null || !Objects.requireNonNull(selectedPiece).color.equals(boardState[i][j].color))) {
-                                addDot(i, j);
+                                addDot(i, j, calculateMidColor(color));
                             }
                         }
                     }
@@ -186,7 +176,7 @@ public class ChessBoard extends JFrame {
                         for (int j = 0; j < BOARD_SIZE; j++) {
                             if (selectedPiece.canMove(selectedRow, selectedCol, i, j, boardState) && (boardState[i][j] == null || !Objects.requireNonNull(selectedPiece).color.equals(boardState[i][j].color))) {
                                 if (boardState[i][j] == null) {
-                                    addDot(i, j);
+                                    addDot(i, j, calculateMidColor(color));
                                 } else {
                                     addDot(i, j, Color.RED);
                                 }
