@@ -2,7 +2,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Objects;
 
 public class ChessBoard extends JFrame {
     private static final int BOARD_SIZE = 8; // Standard chessboard is 8x8
@@ -55,6 +54,7 @@ public class ChessBoard extends JFrame {
         add(rowLabels, BorderLayout.WEST);
         add(colLabels, BorderLayout.SOUTH);
         add(boardPanel, BorderLayout.CENTER);
+        setLocationRelativeTo(null);
     }
 
     private JPanel getSquare(int i, int j) {
@@ -83,10 +83,10 @@ public class ChessBoard extends JFrame {
         JPanel square = squares[row][col];
 
         square.setLayout(new BorderLayout());
-        Dot dot = new Dot((dims[0]-20)/8-20, (dims[1]-20)/8-20, color);
+        Dot dot = new Dot((dims[0] - 20) / 8 - 20, (dims[1] - 20) / 8 - 20, color);
 
         // Add the dot to the center of the square
-        square.add(dot, BorderLayout.CENTER);
+        square.add(dot);
     }
 
     private Color calculateMidColor(Color color2) {
@@ -98,16 +98,28 @@ public class ChessBoard extends JFrame {
 
     private void removeDot(int row, int col) {
         JPanel square = squares[row][col];
+        square.removeAll();
         if (boardState[row][col] != null) {
-            ImageIcon icon = boardState[row][col].getIcon();
-            square.removeAll();
-            square.add(new JLabel(icon));
-        } else {
-            square.removeAll();
+            square.add(new JLabel(boardState[row][col].getIcon()));
         }
     }
 
-    private boolean underCheck(Piece[][] Pieces, int[] position) {
+    private boolean underCheck(Piece[][] Pieces, String color) {
+        int[] position = new int[2];
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                if (boardState[i][j] != null && boardState[i][j].name.equals("King") && boardState[i][j].color.equals(color)) {
+                    position[0] = i;
+                    position[1] = j;
+                    if (color.equals("White")) {
+                        whiteKingPosition = position;
+                    } else {
+                        blackKingPosition = position;
+                    }
+                    break;
+                }
+            }
+        }
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
                 if (Pieces[i][j] != null && !Pieces[i][j].color.equals(Pieces[position[0]][position[1]].color) && Pieces[i][j].canMove(i, j, position[0], position[1], Pieces)) {
@@ -116,6 +128,20 @@ public class ChessBoard extends JFrame {
             }
         }
         return false;
+    }
+
+    private void assistant() {
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                if (checkValidateMove(selectedRow, selectedCol, i, j)) {
+                    if (boardState[i][j] == null) {
+                        addDot(i, j, calculateMidColor(color));
+                    } else {
+                        squares[i][j].setBackground(calculateMidColor(Color.red));
+                    }
+                }
+            }
+        }
     }
 
     private void handleSquareClick(int row, int col) {
@@ -132,107 +158,88 @@ public class ChessBoard extends JFrame {
                 selectedRow = row;
                 selectedCol = col;
                 if (currentPlayer.equals(selectedPiece.color)) {
-                    for (int i = 0; i < BOARD_SIZE; i++) {
-                        for (int j = 0; j < BOARD_SIZE; j++) {
-                            if (selectedPiece.canMove(selectedRow, selectedCol, i, j, boardState) && (boardState[i][j] == null || !Objects.requireNonNull(selectedPiece).color.equals(boardState[i][j].color))) {
-                                addDot(i, j, calculateMidColor(color));
-                            }
-                        }
-                    }
-                    repaint();
-                    revalidate();
+                    assistant();
                 }
             }
         } else {
             // Attempt to move the selected piece
             if (checkValidateMove(selectedRow, selectedCol, row, col)) {
-                currentPlayer = currentPlayer.equals("White") ? "Black" : "White";
-                for (int i = 0; i < BOARD_SIZE; i++) {
-                    for (int j = 0; j < BOARD_SIZE; j++) {
-                        if (boardState[i][j] != null && boardState[i][j].name.equals("King")) {
-                            if (boardState[i][j].color.equals("White")) {
-                                whiteKingPosition = new int[]{i, j};
-                            } else {
-                                blackKingPosition = new int[]{i, j};
-                            }
-                        }
-                    }
+                movePiece(selectedRow, selectedCol, row, col);
+                if (selectedPiece.name.equals("Pawn") && (row == 0 || row == 7)) {
+                    selectedPiece.promote(boardState, row, col, selectedPiece.color.equals("White") ? "Queen" : "Bishop");
+                    JPanel square = squares[row][col];
+                    square.removeAll();
+                    square.add(new JLabel(boardState[row][col].getIcon()));
                 }
-                selectedPiece = null;
-            } else {
-                System.out.println(checkValidateMove(selectedRow, selectedCol, row, col));
+                currentPlayer = currentPlayer.equals("White") ? "Black" : "White";
             }
-            repaint();
-            revalidate();
             selectedPiece = boardState[row][col];
             if (selectedPiece != null) {
                 selectedRow = row;
                 selectedCol = col;
                 if (currentPlayer.equals(selectedPiece.color)) {
-                    for (int i = 0; i < BOARD_SIZE; i++) {
-                        for (int j = 0; j < BOARD_SIZE; j++) {
-                            if (selectedPiece.canMove(selectedRow, selectedCol, i, j, boardState) && (boardState[i][j] == null || !Objects.requireNonNull(selectedPiece).color.equals(boardState[i][j].color))) {
-                                if (boardState[i][j] == null) {
-                                    addDot(i, j, calculateMidColor(color));
-                                } else {
-                                    addDot(i, j, Color.RED);
-                                }
-                            }
-                        }
-                    }
-                    repaint();
-                    revalidate();
+                    assistant();
                 }
             } else {
                 selectedRow = -1;
                 selectedCol = -1;
             }
         }
-        if (underCheck(boardState, whiteKingPosition)) {
+        if (underCheck(boardState, "White")) {
             squares[whiteKingPosition[0]][whiteKingPosition[1]].setBackground(Color.RED);
         }
-        if (underCheck(boardState, blackKingPosition)) {
+        if (underCheck(boardState, "Black")) {
             squares[blackKingPosition[0]][blackKingPosition[1]].setBackground(Color.RED);
         }
         highlightSquare(row, col);
+        repaint();
+        revalidate();
     }
 
     private boolean checkValidateMove(int fromRow, int fromCol, int toRow, int toCol) {
-        System.out.println(currentPlayer.equals(selectedPiece.color) + " " + ((boardState[toRow][toCol] == null) || (boardState[toRow][toCol] != null && !selectedPiece.color.equals(boardState[toRow][toCol].color)) && selectedPiece.canMove(fromRow, fromCol, toRow, toCol, boardState)) + " " + !underCheck(boardState, currentPlayer.equals("White") ? whiteKingPosition : blackKingPosition));
+        boolean result = false;
+        Piece piece = boardState[toRow][toCol];
         if (currentPlayer.equals(selectedPiece.color) &&
-                ((boardState[toRow][toCol] == null) || (boardState[toRow][toCol] != null && !selectedPiece.color.equals(boardState[toRow][toCol].color))) &&
+                ((boardState[toRow][toCol] == null) || (boardState[toRow][toCol] != null &&
+                !selectedPiece.color.equals(boardState[toRow][toCol].color))) &&
                 selectedPiece.canMove(fromRow, fromCol, toRow, toCol, boardState)) {
-            ImageIcon icon = null;
-            if (boardState[toRow][toCol] != null) {
-                icon = boardState[toRow][toCol].getIcon();
-            }
-            movePiece(fromRow, fromCol, toRow, toCol);
-            if (underCheck(boardState, currentPlayer.equals("White") ? whiteKingPosition : blackKingPosition)) {
-                movePiece(toRow, toCol, fromRow, fromCol);
-                if (icon != null) {
-                    squares[toRow][toCol].add(new JLabel(icon));
+            int dir = (toCol-fromCol > 0 ? 1 : -1);
+            if (selectedPiece.name.equals("King") && (Math.abs(toCol - fromCol) > 1)) {
+                if (!checkValidateMove(fromRow, fromCol, toRow, toCol-dir)) {
+                    return false;
                 }
-                return false;
-            } else {
-                return true;
+                fromCol += dir;
             }
+            boardState[toRow][toCol] = boardState[fromRow][fromCol];
+            boardState[fromRow][fromCol] = null;
+            if (!underCheck(boardState, currentPlayer))
+                result = true;
+            boardState[fromRow][fromCol] = boardState[toRow][toCol];
+            boardState[toRow][toCol] = piece;
         }
-        return false;
+        return result;
     }
 
     private void movePiece(int fromRow, int fromCol, int toRow, int toCol) {
+        boolean tabeet = false;
+        int dir = (toCol-fromCol > 0 ? 1 : -1);
+        if (boardState[fromRow][fromCol].name.equals("King") && (Math.abs(toCol - fromCol) > 1)) {
+            tabeet = true;
+        }
         boardState[toRow][toCol] = boardState[fromRow][fromCol];
         boardState[fromRow][fromCol] = null;
         boardState[toRow][toCol].haveMove = true;
 
         squares[toRow][toCol].removeAll();
-        if (boardState[toRow][toCol] != null) {
-            squares[toRow][toCol].add(new JLabel(boardState[toRow][toCol].getIcon()));
-        }
+        squares[toRow][toCol].add(new JLabel(boardState[toRow][toCol].getIcon()));
         squares[fromRow][fromCol].removeAll();
-
-        repaint();
-        revalidate();
+        if (tabeet) {
+            if (dir > 0) {
+                movePiece(fromRow, 7, toRow, 5);
+            } else {
+                movePiece(fromRow, 0, toRow, 3);
+            }
+        }
     }
 
     private void highlightSquare(int row, int col) {
@@ -245,6 +252,13 @@ public class ChessBoard extends JFrame {
                 squares[i][j].setBackground((i + j) % 2 == 0 ? Color.WHITE : this.color);
             }
         }
+    }
+
+    public static void main(String[] args) {
+        EventQueue.invokeLater(() -> {
+            ChessBoard chessBoard = new ChessBoard(new int[]{800, 800}, Color.LIGHT_GRAY);
+            chessBoard.setVisible(true);
+        });
     }
 }
 
@@ -283,6 +297,8 @@ abstract class Piece {
     public ImageIcon getIcon() {
         return icon;
     }
+
+    public void promote(Piece[][] board, int row, int col, String promoteTo){}
 
     public abstract boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board);
 
@@ -331,6 +347,22 @@ class Pawn extends Piece {
         return (toCol == fromCol && board[toRow][toCol] == null && toRow - fromRow == direction) //Common move
                 || (toRow - fromRow == direction && Math.abs(toCol - fromCol) == 1 && board[toRow][toCol] != null) //Eating the piece
                 || (toRow - fromRow == 2 * direction && fromCol == toCol && !this.haveMove && board[fromRow + direction][toCol] == null && board[fromRow + 2 * direction][toCol] == null); //Special move in the first move only
+    }
+    public void promote(Piece[][] board, int row, int col, String promoteTo) {
+        if (row == 0 || row == 7) {
+            Piece piece = null;
+            String path = "assets/W" + promoteTo + ".png";
+            piece = switch (promoteTo) {
+                case "Rook" -> new Rook(this.color, path);
+                case "Bishop" -> new Bishop(this.color, path);
+                case "Knight" -> new Knight(this.color, path);
+                case "Queen" -> new Queen(this.color, path);
+                default -> piece;
+            };
+            assert piece != null;
+            piece.haveMove = true;
+            board[row][col] = piece;
+        }
     }
 }
 
@@ -461,8 +493,25 @@ class King extends Piece {
         // King moves one square in any direction
         int rowDiff = Math.abs(fromRow - toRow);
         int colDiff = Math.abs(fromCol - toCol);
+        if ((rowDiff <= 1 && colDiff <= 1 && rowDiff+colDiff != 0)) { //Normal move
+            return true;
+        }
+        if (!this.haveMove && board[fromRow][0] != null && board[fromRow][0].color.equals(this.color) && board[fromRow][7].name.equals("Rook") && !board[fromRow][0].haveMove && colDiff == 3 && rowDiff == 0) { //Tabeet Kaseer
+            for (int i = 1; i < 4; i++) {
+                if (board[fromRow][i] != null)
+                    return false;
+            }
+            return true;
+        }
+        if (!this.haveMove && board[fromRow][7] != null && board[fromRow][7].color.equals(this.color) && board[fromRow][7].name.equals("Rook") && !board[fromRow][7].haveMove && colDiff == 2 && rowDiff == 0) { //Tabeet Taweel
+            for (int i = 1; i < 3; i++) {
+                if (board[fromRow][7 - i] != null) {
+                    return false;
+                }
+            }
+            return true;
+        }
 
-
-        return (rowDiff <= 1 && colDiff <= 1 && rowDiff+colDiff != 0);
+        return false;
     }
 }
