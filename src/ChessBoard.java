@@ -111,7 +111,6 @@ public class ChessBoard extends JFrame {
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
                 if (Pieces[i][j] != null && !Pieces[i][j].color.equals(Pieces[position[0]][position[1]].color) && Pieces[i][j].canMove(i, j, position[0], position[1], Pieces)) {
-                    System.out.println(Pieces[i][j].name + Pieces[i][j].color + color);
                     return true;
                 }
             }
@@ -146,11 +145,7 @@ public class ChessBoard extends JFrame {
             }
         } else {
             // Attempt to move the selected piece
-            if (currentPlayer.equals(selectedPiece.color) &&
-                    ((boardState[row][col] == null) ||
-                    (boardState[row][col] != null && !selectedPiece.color.equals(boardState[row][col].color))) &&
-                    selectedPiece.canMove(selectedRow, selectedCol, row, col, boardState)) {
-                movePiece(selectedRow, selectedCol, row, col);
+            if (checkValidateMove(selectedRow, selectedCol, row, col)) {
                 currentPlayer = currentPlayer.equals("White") ? "Black" : "White";
                 for (int i = 0; i < BOARD_SIZE; i++) {
                     for (int j = 0; j < BOARD_SIZE; j++) {
@@ -164,6 +159,8 @@ public class ChessBoard extends JFrame {
                     }
                 }
                 selectedPiece = null;
+            } else {
+                System.out.println(checkValidateMove(selectedRow, selectedCol, row, col));
             }
             repaint();
             revalidate();
@@ -200,6 +197,29 @@ public class ChessBoard extends JFrame {
         highlightSquare(row, col);
     }
 
+    private boolean checkValidateMove(int fromRow, int fromCol, int toRow, int toCol) {
+        System.out.println(currentPlayer.equals(selectedPiece.color) + " " + ((boardState[toRow][toCol] == null) || (boardState[toRow][toCol] != null && !selectedPiece.color.equals(boardState[toRow][toCol].color)) && selectedPiece.canMove(fromRow, fromCol, toRow, toCol, boardState)) + " " + !underCheck(boardState, currentPlayer.equals("White") ? whiteKingPosition : blackKingPosition));
+        if (currentPlayer.equals(selectedPiece.color) &&
+                ((boardState[toRow][toCol] == null) || (boardState[toRow][toCol] != null && !selectedPiece.color.equals(boardState[toRow][toCol].color))) &&
+                selectedPiece.canMove(fromRow, fromCol, toRow, toCol, boardState)) {
+            ImageIcon icon = null;
+            if (boardState[toRow][toCol] != null) {
+                icon = boardState[toRow][toCol].getIcon();
+            }
+            movePiece(fromRow, fromCol, toRow, toCol);
+            if (underCheck(boardState, currentPlayer.equals("White") ? whiteKingPosition : blackKingPosition)) {
+                movePiece(toRow, toCol, fromRow, fromCol);
+                if (icon != null) {
+                    squares[toRow][toCol].add(new JLabel(icon));
+                }
+                return false;
+            } else {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void movePiece(int fromRow, int fromCol, int toRow, int toCol) {
         boardState[toRow][toCol] = boardState[fromRow][fromCol];
         boardState[fromRow][fromCol] = null;
@@ -222,7 +242,7 @@ public class ChessBoard extends JFrame {
     private void clearHighlights() {
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
-                squares[i][j].setBackground((i + j) % 2 == 0 ? color : Color.WHITE);
+                squares[i][j].setBackground((i + j) % 2 == 0 ? Color.WHITE : this.color);
             }
         }
     }
@@ -309,8 +329,8 @@ class Pawn extends Piece {
 
         //First move only in pawn can be 2 steps
         return (toCol == fromCol && board[toRow][toCol] == null && toRow - fromRow == direction) //Common move
-                || (board[toRow][toCol] != null && toRow - fromRow == direction && Math.abs(toCol - fromCol) == 1) //Eating the piece
-                || (!this.haveMove && board[fromRow + direction][toCol] == null && board[fromRow + 2 * direction][toCol] == null && toRow - fromRow == 2 * direction && fromCol == toCol); //Special move in the first move only
+                || (toRow - fromRow == direction && Math.abs(toCol - fromCol) == 1 && board[toRow][toCol] != null) //Eating the piece
+                || (toRow - fromRow == 2 * direction && fromCol == toCol && !this.haveMove && board[fromRow + direction][toCol] == null && board[fromRow + 2 * direction][toCol] == null); //Special move in the first move only
     }
 }
 
