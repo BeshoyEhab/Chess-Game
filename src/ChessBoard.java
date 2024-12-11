@@ -4,13 +4,21 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class ChessBoard extends JFrame {
+    public JPanel rightPanel = new JPanel(new GridLayout(4, 1));
+    public String currentPlayer = "White";
+    private int whiteTimeRemaining = 30 * 60 * 10; // 30 minutes in seconds * 10 for accuracy for White
+    private int blackTimeRemaining = 30 * 60 * 10; // 30 minutes in seconds * 10 for accuracy for Black
+    private Timer whiteTimer;
+    private Timer blackTimer;
+    private final JLabel whiteTimerLabel = new JLabel("30:00.0", SwingConstants.CENTER);
+    private final JLabel blackTimerLabel = new JLabel("30:00.0", SwingConstants.CENTER);
+
     private static final int BOARD_SIZE = 8; // Standard chessboard is 8x8
     private final JPanel[][] squares = new JPanel[BOARD_SIZE][BOARD_SIZE];
     private final Piece[][] boardState = Piece.getInitialSetup();
     private Piece selectedPiece = null;
     private int selectedRow = -1, selectedCol = -1;
     private final Color color;
-    public String currentPlayer = "White";
     private final int[] dims;
     private int[] whiteKingPosition = new int[]{7, 3};
     private int[] blackKingPosition = new int[]{0, 3};
@@ -19,9 +27,8 @@ public class ChessBoard extends JFrame {
         this.color = color;
         this.dims = dims;
         setTitle("Chess Board");
-        setSize(dims[0], dims[1]);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setResizable(false);
+        setResizable(true);
 
         JPanel boardPanel = new JPanel(new GridLayout(BOARD_SIZE, BOARD_SIZE));
         boardPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -52,10 +59,57 @@ public class ChessBoard extends JFrame {
                 boardPanel.add(square);
             }
         }
-        add(rowLabels, BorderLayout.WEST);
-        add(colLabels, BorderLayout.SOUTH);
-        add(boardPanel, BorderLayout.CENTER);
+        JPanel board = new JPanel();
+        board.setLayout(new BorderLayout());
+
+        blackTimerLabel.setFont(new Font("Arial", Font.BOLD, 10));
+        whiteTimerLabel.setFont(new Font("Arial", Font.BOLD, 20));
+
+        rightPanel.add(blackTimerLabel);
+        rightPanel.add(whiteTimerLabel);
+
+        // Initialize timers
+        initTimers();
+        board.add(rowLabels, BorderLayout.WEST);
+        board.add(colLabels, BorderLayout.SOUTH);
+        board.add(boardPanel, BorderLayout.CENTER);
+        add(board, BorderLayout.CENTER);
+        add(rightPanel, BorderLayout.EAST);
+
+        pack();
         setLocationRelativeTo(null);
+    }
+
+    private void initTimers() {
+        whiteTimer = new Timer(100, e -> {
+            if (whiteTimeRemaining > 0) {
+                whiteTimeRemaining--;
+                updateTimerLabel(whiteTimerLabel, whiteTimeRemaining);
+            } else {
+                ((Timer) e.getSource()).stop(); // Stop the timer when time runs out
+                JOptionPane.showMessageDialog(this, "White player is out of time!");
+            }
+        });
+
+        blackTimer = new Timer(100, e -> {
+            if (blackTimeRemaining > 0) {
+                blackTimeRemaining--;
+                updateTimerLabel(blackTimerLabel, blackTimeRemaining);
+            } else {
+                ((Timer) e.getSource()).stop(); // Stop the timer when time runs out
+                JOptionPane.showMessageDialog(this, "Black player is out of time!");
+            }
+        });
+
+        whiteTimer.start(); // White player starts first
+    }
+
+    private void updateTimerLabel(JLabel label, int timeInSeconds) {
+        int minutes = timeInSeconds / 600;
+        int seconds = (timeInSeconds % 600) / 10;
+        int hundredths = timeInSeconds % 10;
+
+        label.setText(String.format("%02d:%02d.%d", minutes, seconds, hundredths));
     }
 
     private JPanel getSquare(int i, int j) {
@@ -187,7 +241,27 @@ public class ChessBoard extends JFrame {
                     square.removeAll();
                     square.add(new JLabel(boardState[row][col].getIcon()));
                 }
-                currentPlayer = currentPlayer.equals("White") ? "Black" : "White";
+                if (currentPlayer.equals("White")) {
+                    whiteTimer.stop();
+                    blackTimer.start();
+                    currentPlayer = "Black";
+                    rightPanel.setBackground(Color.BLACK);
+                    blackTimerLabel.setFont(new Font("Arial", Font.BOLD, 20));
+                    whiteTimerLabel.setFont(new Font("Arial", Font.BOLD, 10));
+                    for (int i = 0; i < rightPanel.getComponentCount(); i++) {
+                        rightPanel.getComponent(i).setForeground(Color.WHITE);
+                    }
+                } else {
+                    blackTimer.stop();
+                    whiteTimer.start();
+                    currentPlayer = "White";
+                    rightPanel.setBackground(Color.WHITE);
+                    blackTimerLabel.setFont(new Font("Arial", Font.BOLD, 10));
+                    whiteTimerLabel.setFont(new Font("Arial", Font.BOLD, 20));
+                    for (int i = 0; i < rightPanel.getComponentCount(); i++) {
+                        rightPanel.getComponent(i).setForeground(Color.BLACK);
+                    }
+                }
             }
             selectedPiece = boardState[row][col];
             if (selectedPiece != null) {
