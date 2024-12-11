@@ -10,7 +10,7 @@ public class ChessBoard extends JFrame {
     private Piece selectedPiece = null;
     private int selectedRow = -1, selectedCol = -1;
     private final Color color;
-    private String currentPlayer = "White";
+    public String currentPlayer = "White";
     private final int[] dims;
     private int[] whiteKingPosition = new int[]{7, 3};
     private int[] blackKingPosition = new int[]{0, 3};
@@ -21,6 +21,7 @@ public class ChessBoard extends JFrame {
         setTitle("Chess Board");
         setSize(dims[0], dims[1]);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setResizable(false);
 
         JPanel boardPanel = new JPanel(new GridLayout(BOARD_SIZE, BOARD_SIZE));
         boardPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -130,6 +131,21 @@ public class ChessBoard extends JFrame {
         return false;
     }
 
+    public boolean checkMate() {
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                for (int k = 0; k < BOARD_SIZE; k++) {
+                    for (int l = 0; l < BOARD_SIZE; l++) {
+                        if ((boardState[i][j] != null) && checkValidateMove(i, j, k, l)) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
     private void assistant() {
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
@@ -166,7 +182,7 @@ public class ChessBoard extends JFrame {
             if (checkValidateMove(selectedRow, selectedCol, row, col)) {
                 movePiece(selectedRow, selectedCol, row, col);
                 if (selectedPiece.name.equals("Pawn") && (row == 0 || row == 7)) {
-                    selectedPiece.promote(boardState, row, col, selectedPiece.color.equals("White") ? "Queen" : "Bishop");
+                    selectedPiece.promote(boardState, row, col, "Queen");
                     JPanel square = squares[row][col];
                     square.removeAll();
                     square.add(new JLabel(boardState[row][col].getIcon()));
@@ -187,8 +203,7 @@ public class ChessBoard extends JFrame {
         }
         if (underCheck(boardState, "White")) {
             squares[whiteKingPosition[0]][whiteKingPosition[1]].setBackground(Color.RED);
-        }
-        if (underCheck(boardState, "Black")) {
+        } else if (underCheck(boardState, "Black")) {
             squares[blackKingPosition[0]][blackKingPosition[1]].setBackground(Color.RED);
         }
         highlightSquare(row, col);
@@ -198,6 +213,7 @@ public class ChessBoard extends JFrame {
 
     private boolean checkValidateMove(int fromRow, int fromCol, int toRow, int toCol) {
         boolean result = false;
+        Piece selectedPiece = boardState[fromRow][fromCol];
         Piece piece = boardState[toRow][toCol];
         if (currentPlayer.equals(selectedPiece.color) &&
                 ((boardState[toRow][toCol] == null) || (boardState[toRow][toCol] != null &&
@@ -205,6 +221,9 @@ public class ChessBoard extends JFrame {
                 selectedPiece.canMove(fromRow, fromCol, toRow, toCol, boardState)) {
             int dir = (toCol-fromCol > 0 ? 1 : -1);
             if (selectedPiece.name.equals("King") && (Math.abs(toCol - fromCol) > 1)) {
+                if (underCheck(boardState, currentPlayer)) {
+                    return false;
+                }
                 if (!checkValidateMove(fromRow, fromCol, toRow, toCol-dir)) {
                     return false;
                 }
@@ -212,8 +231,9 @@ public class ChessBoard extends JFrame {
             }
             boardState[toRow][toCol] = boardState[fromRow][fromCol];
             boardState[fromRow][fromCol] = null;
-            if (!underCheck(boardState, currentPlayer))
+            if (!underCheck(boardState, currentPlayer)) {
                 result = true;
+            }
             boardState[fromRow][fromCol] = boardState[toRow][toCol];
             boardState[toRow][toCol] = piece;
         }
@@ -224,7 +244,7 @@ public class ChessBoard extends JFrame {
         boolean tabeet = false;
         int dir = (toCol-fromCol > 0 ? 1 : -1);
         if (boardState[fromRow][fromCol].name.equals("King") && (Math.abs(toCol - fromCol) > 1)) {
-            tabeet = true;
+            tabeet = !underCheck(boardState, currentPlayer);
         }
         boardState[toRow][toCol] = boardState[fromRow][fromCol];
         boardState[fromRow][fromCol] = null;
@@ -253,13 +273,6 @@ public class ChessBoard extends JFrame {
             }
         }
     }
-
-    public static void main(String[] args) {
-        EventQueue.invokeLater(() -> {
-            ChessBoard chessBoard = new ChessBoard(new int[]{800, 800}, Color.LIGHT_GRAY);
-            chessBoard.setVisible(true);
-        });
-    }
 }
 
 class Dot extends JComponent {
@@ -287,6 +300,7 @@ abstract class Piece {
     protected String color; // "White" or "Black"
     protected ImageIcon icon;
     protected boolean haveMove = false;
+    protected static String basePath = "assets/";
 
     public Piece(String name, String color, String iconPath) {
         this.name = name;
@@ -305,7 +319,6 @@ abstract class Piece {
     // Initial setup of the chessboard
     public static Piece[][] getInitialSetup() {
         Piece[][] board = new Piece[8][8];
-        String basePath = "assets/";
 
         board[0][0] = new Rook("Black", basePath + "BRook.png");
         board[0][1] = new Knight("Black", basePath + "BKnight.png");
@@ -348,16 +361,17 @@ class Pawn extends Piece {
                 || (toRow - fromRow == direction && Math.abs(toCol - fromCol) == 1 && board[toRow][toCol] != null) //Eating the piece
                 || (toRow - fromRow == 2 * direction && fromCol == toCol && !this.haveMove && board[fromRow + direction][toCol] == null && board[fromRow + 2 * direction][toCol] == null); //Special move in the first move only
     }
+
     public void promote(Piece[][] board, int row, int col, String promoteTo) {
         if (row == 0 || row == 7) {
-            Piece piece = null;
-            String path = "assets/W" + promoteTo + ".png";
+            Piece piece;
+            String path = basePath + (this.color.equals("White") ? "W" : "B") + promoteTo + ".png";
             piece = switch (promoteTo) {
                 case "Rook" -> new Rook(this.color, path);
                 case "Bishop" -> new Bishop(this.color, path);
                 case "Knight" -> new Knight(this.color, path);
                 case "Queen" -> new Queen(this.color, path);
-                default -> piece;
+                default -> null;
             };
             assert piece != null;
             piece.haveMove = true;
@@ -496,14 +510,14 @@ class King extends Piece {
         if ((rowDiff <= 1 && colDiff <= 1 && rowDiff+colDiff != 0)) { //Normal move
             return true;
         }
-        if (!this.haveMove && board[fromRow][0] != null && board[fromRow][0].color.equals(this.color) && board[fromRow][7].name.equals("Rook") && !board[fromRow][0].haveMove && colDiff == 3 && rowDiff == 0) { //Tabeet Kaseer
+        if (!this.haveMove && board[fromRow][0] != null && board[fromRow][0].color.equals(this.color) && board[fromRow][0].name.equals("Rook") && !board[fromRow][0].haveMove && colDiff == 2 && rowDiff == 0) { //Tabeet Taweel
             for (int i = 1; i < 4; i++) {
                 if (board[fromRow][i] != null)
                     return false;
             }
             return true;
         }
-        if (!this.haveMove && board[fromRow][7] != null && board[fromRow][7].color.equals(this.color) && board[fromRow][7].name.equals("Rook") && !board[fromRow][7].haveMove && colDiff == 2 && rowDiff == 0) { //Tabeet Taweel
+        if (!this.haveMove && board[fromRow][7] != null && board[fromRow][7].color.equals(this.color) && board[fromRow][7].name.equals("Rook") && !board[fromRow][7].haveMove && colDiff == 2 && rowDiff == 0) { //Tabeet Kaseer
             for (int i = 1; i < 3; i++) {
                 if (board[fromRow][7 - i] != null) {
                     return false;
