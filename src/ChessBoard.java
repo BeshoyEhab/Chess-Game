@@ -29,7 +29,6 @@ public class ChessBoard extends JFrame {
         setTitle("Chess Board");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(true);
-        setSize(dims[0], dims[1]);
 
         JPanel boardPanel = new JPanel(new GridLayout(BOARD_SIZE, BOARD_SIZE));
         boardPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -62,6 +61,7 @@ public class ChessBoard extends JFrame {
         }
         JPanel board = new JPanel();
         board.setLayout(new BorderLayout());
+        board.setPreferredSize(new Dimension(dims[0], dims[1]));
 
         blackTimerLabel.setFont(new Font("Arial", Font.BOLD, 10));
         whiteTimerLabel.setFont(new Font("Arial", Font.BOLD, 20));
@@ -77,6 +77,7 @@ public class ChessBoard extends JFrame {
         add(board, BorderLayout.CENTER);
         add(rightPanel, BorderLayout.EAST);
 
+        pack();
         setLocationRelativeTo(null);
     }
 

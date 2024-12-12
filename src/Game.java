@@ -62,7 +62,7 @@ public class Game extends JFrame{
             }
 
             // Initialize the chessboard
-            board = new ChessBoard(new int[]{1000, 900}, Color.LIGHT_GRAY);
+            board = new ChessBoard(new int[]{800, 800}, Color.LIGHT_GRAY);
             board.setVisible(true);
 
             // Add player name based on color
