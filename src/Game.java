@@ -17,6 +17,8 @@ public class Game extends JFrame{
             while (true) {
                 if (board.checkMate()) {
                     EventQueue.invokeLater(() -> {
+                        board.whiteTimer.stop();
+                        board.blackTimer.stop();
                         JOptionPane.showMessageDialog(this, (board.currentPlayer.equals("White") ? "Black" : "White") + " has won!");
 
                         int restartOption = JOptionPane.showConfirmDialog(this, "Do you want to restart the game?", "Restart Game", JOptionPane.YES_NO_OPTION);
@@ -62,7 +64,7 @@ public class Game extends JFrame{
             }
 
             // Initialize the chessboard
-            board = new ChessBoard(new int[]{800, 800}, Color.LIGHT_GRAY);
+            board = new ChessBoard(new int[]{800, 800}, Color.LIGHT_GRAY, 10);
             board.setVisible(true);
 
             // Add player name based on color

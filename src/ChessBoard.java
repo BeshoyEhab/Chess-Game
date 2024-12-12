@@ -9,8 +9,8 @@ public class ChessBoard extends JFrame {
     public String currentPlayer = "White";
     private int whiteTimeRemaining = 30 * 60 * 10; // 30 minutes in seconds * 10 for accuracy for White
     private int blackTimeRemaining = 30 * 60 * 10; // 30 minutes in seconds * 10 for accuracy for Black
-    private Timer whiteTimer;
-    private Timer blackTimer;
+    public Timer whiteTimer;
+    public Timer blackTimer;
     private final JLabel whiteTimerLabel = new JLabel("30:00.0", SwingConstants.CENTER);
     private final JLabel blackTimerLabel = new JLabel("30:00.0", SwingConstants.CENTER);
     private final ArrayList<Move> moves = new ArrayList<>();
@@ -25,10 +25,15 @@ public class ChessBoard extends JFrame {
     private int[] whiteKingPosition = new int[]{7, 3};
     private int[] blackKingPosition = new int[]{0, 3};
 
-    public ChessBoard(int[] dims, Color color) {
+    public ChessBoard(int[] dims, Color color, int timer) {
         moves.add(new Move(0, 0, 0, 0, null, null));
         this.color = color;
         this.dims = dims;
+        this.whiteTimeRemaining = timer * 600;
+        this.blackTimeRemaining = timer * 600;
+        updateTimerLabel(whiteTimerLabel, whiteTimeRemaining);
+        updateTimerLabel(blackTimerLabel, blackTimeRemaining);
+
         setTitle("Chess Board");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(true);
