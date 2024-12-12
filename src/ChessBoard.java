@@ -29,6 +29,7 @@ public class ChessBoard extends JFrame {
         setTitle("Chess Board");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(true);
+        setSize(dims[0], dims[1]);
 
         JPanel boardPanel = new JPanel(new GridLayout(BOARD_SIZE, BOARD_SIZE));
         boardPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -76,7 +77,6 @@ public class ChessBoard extends JFrame {
         add(board, BorderLayout.CENTER);
         add(rightPanel, BorderLayout.EAST);
 
-        pack();
         setLocationRelativeTo(null);
     }
 
@@ -317,7 +317,7 @@ public class ChessBoard extends JFrame {
     private void movePiece(int fromRow, int fromCol, int toRow, int toCol) {
         boolean tabeet = false;
         int dir = (toCol-fromCol > 0 ? 1 : -1);
-        if (boardState[fromRow][fromCol].name.equals("King") && (Math.abs(toCol - fromCol) > 1)) {
+        if (boardState[fromRow][fromCol].name.equals("King") && (Math.abs(toCol - fromCol) == 2)) {
             tabeet = !underCheck(boardState, currentPlayer);
         }
         boardState[toRow][toCol] = boardState[fromRow][fromCol];
@@ -580,20 +580,23 @@ class King extends Piece {
     public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board) {
         // King moves one square in any direction
         int rowDiff = Math.abs(fromRow - toRow);
-        int colDiff = Math.abs(fromCol - toCol);
-        if ((rowDiff <= 1 && colDiff <= 1 && rowDiff+colDiff != 0)) { //Normal move
+        int colDiff = fromCol - toCol;
+
+        if ((rowDiff <= 1 && Math.abs(colDiff) <= 1 && rowDiff+Math.abs(colDiff) != 0)) { //Normal move
             return true;
         }
         if (!this.haveMove && board[fromRow][0] != null && board[fromRow][0].color.equals(this.color) && board[fromRow][0].name.equals("Rook") && !board[fromRow][0].haveMove && colDiff == 2 && rowDiff == 0) { //Tabeet Taweel
             for (int i = 1; i < 4; i++) {
-                if (board[fromRow][i] != null)
+                if (board[fromRow][i] != null) {
                     return false;
+                }
             }
             return true;
         }
-        if (!this.haveMove && board[fromRow][7] != null && board[fromRow][7].color.equals(this.color) && board[fromRow][7].name.equals("Rook") && !board[fromRow][7].haveMove && colDiff == 2 && rowDiff == 0) { //Tabeet Kaseer
+        if (!this.haveMove && board[fromRow][7] != null && board[fromRow][7].color.equals(this.color) && board[fromRow][7].name.equals("Rook") && !board[fromRow][7].haveMove && colDiff == -2 && rowDiff == 0) { //Tabeet Kaseer
             for (int i = 1; i < 3; i++) {
                 if (board[fromRow][7 - i] != null) {
+                    System.out.println(board[fromRow][7 - i].name);
                     return false;
                 }
             }

@@ -1,7 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
 
-
 public class Game extends JFrame{
     public ChessBoard board;
     private String playerName1;
@@ -50,7 +49,7 @@ public class Game extends JFrame{
                 playerName1 = "Player 1";
             }
             playerName2 = JOptionPane.showInputDialog(this, "Player 2 name:");
-            if (playerName2 == null || playerName1.trim().isEmpty()) {
+            if (playerName2 == null || playerName2.trim().isEmpty()) {
                 playerName2 = "Player 2";
             }
 
@@ -63,7 +62,7 @@ public class Game extends JFrame{
             }
 
             // Initialize the chessboard
-            board = new ChessBoard(new int[]{900, 900}, Color.LIGHT_GRAY);
+            board = new ChessBoard(new int[]{1000, 900}, Color.LIGHT_GRAY);
             board.setVisible(true);
 
             // Add player name based on color
