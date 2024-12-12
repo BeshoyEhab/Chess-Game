@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 
 public class ChessBoard extends JFrame {
     public JPanel rightPanel = new JPanel(new GridLayout(4, 1));
@@ -12,6 +13,7 @@ public class ChessBoard extends JFrame {
     private Timer blackTimer;
     private final JLabel whiteTimerLabel = new JLabel("30:00.0", SwingConstants.CENTER);
     private final JLabel blackTimerLabel = new JLabel("30:00.0", SwingConstants.CENTER);
+    private final ArrayList<Move> moves = new ArrayList<>();
 
     private static final int BOARD_SIZE = 8; // Standard chessboard is 8x8
     private final JPanel[][] squares = new JPanel[BOARD_SIZE][BOARD_SIZE];
@@ -24,6 +26,7 @@ public class ChessBoard extends JFrame {
     private int[] blackKingPosition = new int[]{0, 3};
 
     public ChessBoard(int[] dims, Color color) {
+        moves.add(new Move(0, 0, 0, 0, null, null));
         this.color = color;
         this.dims = dims;
         setTitle("Chess Board");
@@ -59,6 +62,7 @@ public class ChessBoard extends JFrame {
                 boardPanel.add(square);
             }
         }
+        
         JPanel board = new JPanel();
         board.setLayout(new BorderLayout());
         board.setPreferredSize(new Dimension(dims[0], dims[1]));
@@ -178,7 +182,7 @@ public class ChessBoard extends JFrame {
         }
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
-                if (Pieces[i][j] != null && !Pieces[i][j].color.equals(Pieces[position[0]][position[1]].color) && Pieces[i][j].canMove(i, j, position[0], position[1], Pieces)) {
+                if (Pieces[i][j] != null && !Pieces[i][j].color.equals(Pieces[position[0]][position[1]].color) && Pieces[i][j].canMove(i, j, position[0], position[1], Pieces, moves.getLast() != null ? moves.getLast() : new Move(position[0], position[1], i, j, Pieces[position[0]][position[1]], null))) {
                     return true;
                 }
             }
@@ -236,6 +240,7 @@ public class ChessBoard extends JFrame {
             // Attempt to move the selected piece
             if (checkValidateMove(selectedRow, selectedCol, row, col)) {
                 movePiece(selectedRow, selectedCol, row, col);
+                System.out.print(moves.size() % 2 == 0 ? (moves.size()+1)/2 + ") " + moves.getLast().toString() : "\t | " + moves.getLast().toString() + "\n");
                 if (selectedPiece.name.equals("Pawn") && (row == 0 || row == 7)) {
                     selectedPiece.promote(boardState, row, col, "Queen");
                     JPanel square = squares[row][col];
@@ -293,7 +298,7 @@ public class ChessBoard extends JFrame {
         if (currentPlayer.equals(selectedPiece.color) &&
                 ((boardState[toRow][toCol] == null) || (boardState[toRow][toCol] != null &&
                 !selectedPiece.color.equals(boardState[toRow][toCol].color))) &&
-                selectedPiece.canMove(fromRow, fromCol, toRow, toCol, boardState)) {
+                selectedPiece.canMove(fromRow, fromCol, toRow, toCol, boardState, moves.getLast() != null ? moves.getLast() : new Move(fromRow, fromCol, toRow, toCol, selectedPiece, null))) {
             int dir = (toCol-fromCol > 0 ? 1 : -1);
             if (selectedPiece.name.equals("King") && (Math.abs(toCol - fromCol) > 1)) {
                 if (underCheck(boardState, currentPlayer)) {
@@ -316,11 +321,20 @@ public class ChessBoard extends JFrame {
     }
 
     private void movePiece(int fromRow, int fromCol, int toRow, int toCol) {
-        boolean tabeet = false;
+        boolean castling = false;
+        moves.add(new Move(fromRow, fromCol, toRow, toCol, boardState[fromRow][fromCol], boardState[toRow][toCol]));
+        
         int dir = (toCol-fromCol > 0 ? 1 : -1);
         if (boardState[fromRow][fromCol].name.equals("King") && (Math.abs(toCol - fromCol) == 2)) {
-            tabeet = !underCheck(boardState, currentPlayer);
+            castling = !underCheck(boardState, currentPlayer);
+        } else if (boardState[fromRow][fromCol].name.equals("Pawn") && (Math.abs(toCol - fromCol) == 1) && boardState[toRow][toCol] == null) {
+            moves.removeLast();
+            Move move = moves.getLast();
+            boardState[move.toRow][move.toCol] = null;
+            squares[move.toRow][move.toCol].removeAll();
+            moves.add(new Move(fromRow, fromCol, toRow, toCol, boardState[fromRow][fromCol], null));
         }
+
         boardState[toRow][toCol] = boardState[fromRow][fromCol];
         boardState[fromRow][fromCol] = null;
         boardState[toRow][toCol].haveMove = true;
@@ -328,12 +342,14 @@ public class ChessBoard extends JFrame {
         squares[toRow][toCol].removeAll();
         squares[toRow][toCol].add(new JLabel(boardState[toRow][toCol].getIcon()));
         squares[fromRow][fromCol].removeAll();
-        if (tabeet) {
+
+        if (castling) {
             if (dir > 0) {
                 movePiece(fromRow, 7, toRow, 5);
             } else {
                 movePiece(fromRow, 0, toRow, 3);
             }
+            moves.removeLast();
         }
     }
 
@@ -389,7 +405,7 @@ abstract class Piece {
 
     public void promote(Piece[][] board, int row, int col, String promoteTo){}
 
-    public abstract boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board);
+    public abstract boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board, Move move);
 
     // Initial setup of the chessboard
     public static Piece[][] getInitialSetup() {
@@ -427,14 +443,15 @@ class Pawn extends Piece {
     }
 
     @Override
-    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board) {
+    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board, Move move) {
         // Basic pawn movement logic
         int direction = color.equals("White") ? -1 : 1;
 
         //First move only in pawn can be 2 steps
         return (toCol == fromCol && board[toRow][toCol] == null && toRow - fromRow == direction) //Common move
                 || (toRow - fromRow == direction && Math.abs(toCol - fromCol) == 1 && board[toRow][toCol] != null) //Eating the piece
-                || (toRow - fromRow == 2 * direction && fromCol == toCol && !this.haveMove && board[fromRow + direction][toCol] == null && board[fromRow + 2 * direction][toCol] == null); //Special move in the first move only
+                || (toRow - fromRow == 2 * direction && fromCol == toCol && !this.haveMove && board[fromRow + direction][toCol] == null && board[fromRow + 2 * direction][toCol] == null) //Special move in the first move only
+                || (move.piece != null && move.piece.name.equals("Pawn") && board[toRow][toCol] == null && move.toRow-fromRow == 0 && toCol == move.fromCol && toRow-fromRow == direction && Math.abs(move.fromRow - move.toRow) == 2); //En passing
     }
 
     public void promote(Piece[][] board, int row, int col, String promoteTo) {
@@ -461,7 +478,7 @@ class Rook extends Piece {
     }
 
     @Override
-    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board) {
+    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board, Move move) {
         // Basic rook movement logic
         int rowDiff = Math.abs(fromRow - toRow);
         int colDiff = Math.abs(fromCol - toCol);
@@ -495,7 +512,7 @@ class Knight extends Piece {
     }
 
     @Override
-    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board) {
+    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board, Move move) {
         // Knight movement logic
         int rowDiff = Math.abs(fromRow - toRow);
         int colDiff = Math.abs(fromCol - toCol);
@@ -508,7 +525,7 @@ class Bishop extends Piece {
     }
 
     @Override
-    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board) {
+    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board, Move move) {
         // Bishop moves diagonally: |rowDiff| == |colDiff|
         int rowDiff = Math.abs(fromRow - toRow);
         int colDiff = Math.abs(fromCol - toCol);
@@ -534,7 +551,7 @@ class Queen extends Piece {
     }
 
     @Override
-    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board) {
+    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board, Move move) {
         // Queen combines Rook and Bishop moves
         int rowDiff = Math.abs(fromRow - toRow);
         int colDiff = Math.abs(fromCol - toCol);
@@ -578,7 +595,7 @@ class King extends Piece {
     }
 
     @Override
-    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board) {
+    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board, Move move) {
         // King moves one square in any direction
         int rowDiff = Math.abs(fromRow - toRow);
         int colDiff = fromCol - toCol;
@@ -586,7 +603,7 @@ class King extends Piece {
         if ((rowDiff <= 1 && Math.abs(colDiff) <= 1 && rowDiff+Math.abs(colDiff) != 0)) { //Normal move
             return true;
         }
-        if (!this.haveMove && board[fromRow][0] != null && board[fromRow][0].color.equals(this.color) && board[fromRow][0].name.equals("Rook") && !board[fromRow][0].haveMove && colDiff == 2 && rowDiff == 0) { //Tabeet Taweel
+        if (!this.haveMove && board[fromRow][0] != null && board[fromRow][0].color.equals(this.color) && board[fromRow][0].name.equals("Rook") && !board[fromRow][0].haveMove && colDiff == 2 && rowDiff == 0) { //Queen side Castling
             for (int i = 1; i < 4; i++) {
                 if (board[fromRow][i] != null) {
                     return false;
@@ -594,7 +611,7 @@ class King extends Piece {
             }
             return true;
         }
-        if (!this.haveMove && board[fromRow][7] != null && board[fromRow][7].color.equals(this.color) && board[fromRow][7].name.equals("Rook") && !board[fromRow][7].haveMove && colDiff == -2 && rowDiff == 0) { //Tabeet Kaseer
+        if (!this.haveMove && board[fromRow][7] != null && board[fromRow][7].color.equals(this.color) && board[fromRow][7].name.equals("Rook") && !board[fromRow][7].haveMove && colDiff == -2 && rowDiff == 0) { //King side Castling
             for (int i = 1; i < 3; i++) {
                 if (board[fromRow][7 - i] != null) {
                     System.out.println(board[fromRow][7 - i].name);
