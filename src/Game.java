@@ -69,16 +69,16 @@ public class Game extends JFrame{
 
             // Add player name based on color
             JLabel player1NameLabel = new JLabel(playerName1, SwingConstants.CENTER);
-            player1NameLabel.setFont(new Font("Arial", Font.BOLD, 16));
+            player1NameLabel.setFont(new Font("Arial", Font.BOLD, 20));
             JLabel player2NameLabel = new JLabel(playerName2, SwingConstants.CENTER);
-            player2NameLabel.setFont(new Font("Arial", Font.BOLD, 16));
+            player2NameLabel.setFont(new Font("Arial", Font.BOLD, 20));
 
             if ("White".equals(playerColor)) {
                 board.rightPanel.add(player2NameLabel, 0);
-                board.rightPanel.add(player1NameLabel, 2);
+                board.rightPanel.add(player1NameLabel);
             } else {
                 board.rightPanel.add(player1NameLabel, 0);
-                board.rightPanel.add(player2NameLabel, 2);
+                board.rightPanel.add(player2NameLabel);
             }
 
             checkForCheckmate();

@@ -7,8 +7,8 @@ import java.util.ArrayList;
 public class ChessBoard extends JFrame {
     public JPanel rightPanel = new JPanel(new GridLayout(4, 1));
     public String currentPlayer = "White";
-    private int whiteTimeRemaining = 30 * 60 * 10; // 30 minutes in seconds * 10 for accuracy for White
-    private int blackTimeRemaining = 30 * 60 * 10; // 30 minutes in seconds * 10 for accuracy for Black
+    private int whiteTimeRemaining; // 30 minutes in seconds * 10 for accuracy for White
+    private int blackTimeRemaining; // 30 minutes in seconds * 10 for accuracy for Black
     public Timer whiteTimer;
     public Timer blackTimer;
     private final JLabel whiteTimerLabel = new JLabel("30:00.0", SwingConstants.CENTER);
@@ -25,12 +25,12 @@ public class ChessBoard extends JFrame {
     private int[] whiteKingPosition = new int[]{7, 3};
     private int[] blackKingPosition = new int[]{0, 3};
 
-    public ChessBoard(int[] dims, Color color, int timer) {
+    public ChessBoard(int[] dims, Color color, int minutes) {
         moves.add(new Move(0, 0, 0, 0, null, null));
         this.color = color;
         this.dims = dims;
-        this.whiteTimeRemaining = timer * 600;
-        this.blackTimeRemaining = timer * 600;
+        this.whiteTimeRemaining = minutes * 600;
+        this.blackTimeRemaining = minutes * 600;
         updateTimerLabel(whiteTimerLabel, whiteTimeRemaining);
         updateTimerLabel(blackTimerLabel, blackTimeRemaining);
 
@@ -168,22 +168,23 @@ public class ChessBoard extends JFrame {
         }
     }
 
-    private boolean underCheck(Piece[][] Pieces, String color) {
-        int[] position = new int[2];
+    private void updateKingPosition() {
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
-                if (boardState[i][j] != null && boardState[i][j].name.equals("King") && boardState[i][j].color.equals(color)) {
-                    position[0] = i;
-                    position[1] = j;
-                    if (color.equals("White")) {
-                        whiteKingPosition = position;
+                if (boardState[i][j] != null && boardState[i][j].name.equals("King")) {
+                    if (boardState[i][j].color.equals("White")) {
+                        whiteKingPosition = new int[]{i, j};
                     } else {
-                        blackKingPosition = position;
+                        blackKingPosition = new int[]{i, j};
                     }
                     break;
                 }
             }
         }
+    }
+    private boolean underCheck(Piece[][] Pieces, String color) {
+        updateKingPosition();
+        int[] position = color.equals("White") ? whiteKingPosition : blackKingPosition;
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
                 if (Pieces[i][j] != null && !Pieces[i][j].color.equals(Pieces[position[0]][position[1]].color) && Pieces[i][j].canMove(i, j, position[0], position[1], Pieces, moves.getLast() != null ? moves.getLast() : new Move(position[0], position[1], i, j, Pieces[position[0]][position[1]], null))) {
