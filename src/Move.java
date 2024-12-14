@@ -5,6 +5,7 @@ public class Move {
     public final int toCol;
     final Piece piece;
     final Piece capturedPiece;
+    static int movesToStalemate = 0;
 
     public Move(int fromRow, int fromCol, int toRow, int toCol, Piece piece, Piece capturedPiece) {
         this.fromRow = fromRow;
@@ -13,6 +14,11 @@ public class Move {
         this.toCol = toCol;
         this.piece = piece;
         this.capturedPiece = capturedPiece;
+        if (piece != null && (piece.name.equals("Pawn") || piece.name.equals("King"))) {
+            movesToStalemate = 0;
+        } else {
+            movesToStalemate++;
+        }
     }
 
     @Override
@@ -35,5 +41,9 @@ public class Move {
             resutl += " x " + capturedPiece.name;
         }
         return resutl;
+    }
+
+    public boolean equals(Move move) {
+        return this.fromRow == move.fromRow && this.fromCol == move.fromCol && this.toRow == move.toRow && this.toCol == move.toCol && this.piece != null && this.piece.name.equals(move.piece.name) && this.piece.color.equals(move.piece.color);
     }
 }

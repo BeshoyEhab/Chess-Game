@@ -1,6 +1,6 @@
 class Knight extends Piece {
-    public Knight(String color, String iconPath) {
-        super("Knight", color, iconPath);
+    public Knight(String color) {
+        super("Knight", color);
     }
 
     @Override

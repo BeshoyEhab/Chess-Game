@@ -1,32 +1,21 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
 
 public class ChessBoard extends JFrame {
     public JPanel rightPanel = new JPanel(new GridLayout(4, 1));
-    public String currentPlayer = "White";
     private int whiteTimeRemaining; // 30 minutes in seconds * 10 for accuracy for White
     private int blackTimeRemaining; // 30 minutes in seconds * 10 for accuracy for Black
     public Timer whiteTimer;
     public Timer blackTimer;
     private final JLabel whiteTimerLabel = new JLabel("30:00.0", SwingConstants.CENTER);
     private final JLabel blackTimerLabel = new JLabel("30:00.0", SwingConstants.CENTER);
-    private final ArrayList<Move> moves = new ArrayList<>();
-
     private static final int BOARD_SIZE = 8; // Standard chessboard is 8x8
+
     private final JPanel[][] squares = new JPanel[BOARD_SIZE][BOARD_SIZE];
-    private final Piece[][] boardState = Piece.getInitialSetup();
-    private Piece selectedPiece = null;
-    private int selectedRow = -1, selectedCol = -1;
     private final Color color;
     private final int[] dims;
-    private int[] whiteKingPosition = new int[]{7, 3};
-    private int[] blackKingPosition = new int[]{0, 3};
 
     public ChessBoard(int[] dims, Color color, int minutes) {
-        moves.add(new Move(0, 0, 0, 0, null, null));
         this.color = color;
         this.dims = dims;
         this.whiteTimeRemaining = minutes * 600;
@@ -60,7 +49,7 @@ public class ChessBoard extends JFrame {
         // Initialize the grid with pieces
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
-                JPanel square = getSquare(i, j);
+                JPanel square = setSquare(i, j);
 
                 squares[i][j] = square;
                 boardPanel.add(square);
@@ -70,6 +59,8 @@ public class ChessBoard extends JFrame {
         JPanel board = new JPanel();
         board.setLayout(new BorderLayout());
         board.setPreferredSize(new Dimension(dims[0], dims[1]));
+        rowLabels.setPreferredSize(new Dimension(dims[0]/40, dims[1]));
+        colLabels.setPreferredSize(new Dimension(dims[0], dims[1]/40));
 
         blackTimerLabel.setFont(new Font("Arial", Font.BOLD, 10));
         whiteTimerLabel.setFont(new Font("Arial", Font.BOLD, 20));
@@ -121,251 +112,79 @@ public class ChessBoard extends JFrame {
         label.setText(String.format("%02d:%02d.%d", minutes, seconds, hundredths));
     }
 
-    private JPanel getSquare(int i, int j) {
+    private JPanel setSquare(int i, int j) {
         JPanel square = new JPanel(new BorderLayout());
         square.setBackground((i + j) % 2 == 0 ? Color.WHITE : this.color);
-        // Capture variables for listener
 
-        // Add piece icon if present
-        if (boardState[i][j] != null) {
-            JLabel pieceLabel = new JLabel(boardState[i][j].getIcon());
-            pieceLabel.setHorizontalAlignment(SwingConstants.CENTER);
-            square.add(pieceLabel);
-        }
-
-        // Add mouse listener for movement
-        square.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                handleSquareClick(i, j);
-            }
-        });
         return square;
     }
 
-    private void addDot(int row, int col, Color color) {
-        JPanel square = squares[row][col];
+    public JPanel getSquare(int i, int j) {
+        return squares[i][j];
+    }
 
-        square.setLayout(new BorderLayout());
+    public void addDot(int row, int col, Color color) {
+        squares[row][col].setLayout(new BorderLayout());
         Dot dot = new Dot((dims[0] - 20) / 8 - 20, (dims[1] - 20) / 8 - 20, color);
 
         // Add the dot to the center of the square
-        square.add(dot);
+        squares[row][col].add(dot);
     }
 
-    private Color calculateMidColor(Color color2) {
-        int r = (Color.WHITE.getRed() + color2.getRed()) / 2;
-        int g = (Color.WHITE.getGreen() + color2.getGreen()) / 2;
-        int b = (Color.WHITE.getBlue() + color2.getBlue()) / 2;
-        return new Color(r, g, b);
-    }
-
-    private void removeDot(int row, int col) {
-        JPanel square = squares[row][col];
-        square.removeAll();
-        if (boardState[row][col] != null) {
-            square.add(new JLabel(boardState[row][col].getIcon()));
+    public void removeDot(int row, int col, Piece piece) {
+        removeSquare(row, col);
+        if (piece != null) {
+            addSquare(row, col, piece.getIcon());
         }
     }
 
-    private void updateKingPosition() {
-        for (int i = 0; i < BOARD_SIZE; i++) {
-            for (int j = 0; j < BOARD_SIZE; j++) {
-                if (boardState[i][j] != null && boardState[i][j].name.equals("King")) {
-                    if (boardState[i][j].color.equals("White")) {
-                        whiteKingPosition = new int[]{i, j};
-                    } else {
-                        blackKingPosition = new int[]{i, j};
-                    }
-                    break;
-                }
-            }
-        }
-    }
-    private boolean underCheck(Piece[][] Pieces, String color) {
-        updateKingPosition();
-        int[] position = color.equals("White") ? whiteKingPosition : blackKingPosition;
-        for (int i = 0; i < BOARD_SIZE; i++) {
-            for (int j = 0; j < BOARD_SIZE; j++) {
-                if (Pieces[i][j] != null && !Pieces[i][j].color.equals(Pieces[position[0]][position[1]].color) && Pieces[i][j].canMove(i, j, position[0], position[1], Pieces, moves.getLast() != null ? moves.getLast() : new Move(position[0], position[1], i, j, Pieces[position[0]][position[1]], null))) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    public void removeSquare(int row, int col) {
+        squares[row][col].removeAll();
     }
 
-    public boolean checkMate() {
-        for (int i = 0; i < BOARD_SIZE; i++) {
-            for (int j = 0; j < BOARD_SIZE; j++) {
-                for (int k = 0; k < BOARD_SIZE; k++) {
-                    for (int l = 0; l < BOARD_SIZE; l++) {
-                        if ((boardState[i][j] != null) && checkValidateMove(i, j, k, l)) {
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
-        return true;
+    public void moveSquare(int fromRow, int fromCol, int toRow, int toCol, ImageIcon icon) {
+        removeSquare(toRow, toCol);
+        addSquare(toRow, toCol, icon);
+        removeSquare(fromRow, fromCol);
     }
 
-    private void assistant() {
-        for (int i = 0; i < BOARD_SIZE; i++) {
-            for (int j = 0; j < BOARD_SIZE; j++) {
-                if (checkValidateMove(selectedRow, selectedCol, i, j)) {
-                    if (boardState[i][j] == null) {
-                        addDot(i, j, calculateMidColor(color));
-                    } else {
-                        squares[i][j].setBackground(calculateMidColor(Color.red));
-                    }
-                }
-            }
-        }
+    public void addSquare(int row, int col, ImageIcon icon) {
+        JLabel pieceLabel = new JLabel(icon);
+        pieceLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        squares[row][col].add(pieceLabel);
+        squares[row][col].setBackground((row + col) % 2 == 0 ? Color.WHITE : this.color);
     }
 
-    private void handleSquareClick(int row, int col) {
-        clearHighlights();
-        for (int i = 0; i < BOARD_SIZE; i++) {
-            for (int j = 0; j < BOARD_SIZE; j++) {
-                removeDot(i, j);
-            }
-        }
-        if (selectedPiece == null) {
-            // Select a piece
-            selectedPiece = boardState[row][col];
-            if (selectedPiece != null) {
-                selectedRow = row;
-                selectedCol = col;
-                if (currentPlayer.equals(selectedPiece.color)) {
-                    assistant();
-                }
-            }
-        } else {
-            // Attempt to move the selected piece
-            if (checkValidateMove(selectedRow, selectedCol, row, col)) {
-                movePiece(selectedRow, selectedCol, row, col);
-                System.out.print(moves.size() % 2 == 0 ? (moves.size()+1)/2 + ") " + moves.getLast().toString() : "\t | " + moves.getLast().toString() + "\n");
-                if (selectedPiece.name.equals("Pawn") && (row == 0 || row == 7)) {
-                    selectedPiece.promote(boardState, row, col, "Queen");
-                    JPanel square = squares[row][col];
-                    square.removeAll();
-                    square.add(new JLabel(boardState[row][col].getIcon()));
-                }
-                if (currentPlayer.equals("White")) {
-                    whiteTimer.stop();
-                    blackTimer.start();
-                    currentPlayer = "Black";
-                    rightPanel.setBackground(Color.BLACK);
-                    blackTimerLabel.setFont(new Font("Arial", Font.BOLD, 20));
-                    whiteTimerLabel.setFont(new Font("Arial", Font.BOLD, 10));
-                    for (int i = 0; i < rightPanel.getComponentCount(); i++) {
-                        rightPanel.getComponent(i).setForeground(Color.WHITE);
-                    }
-                } else {
-                    blackTimer.stop();
-                    whiteTimer.start();
-                    currentPlayer = "White";
-                    rightPanel.setBackground(Color.WHITE);
-                    blackTimerLabel.setFont(new Font("Arial", Font.BOLD, 10));
-                    whiteTimerLabel.setFont(new Font("Arial", Font.BOLD, 20));
-                    for (int i = 0; i < rightPanel.getComponentCount(); i++) {
-                        rightPanel.getComponent(i).setForeground(Color.BLACK);
-                    }
-                }
-            }
-            selectedPiece = boardState[row][col];
-            if (selectedPiece != null) {
-                selectedRow = row;
-                selectedCol = col;
-                if (currentPlayer.equals(selectedPiece.color)) {
-                    assistant();
-                }
-            } else {
-                selectedRow = -1;
-                selectedCol = -1;
-            }
-        }
-        if (underCheck(boardState, "White")) {
-            squares[whiteKingPosition[0]][whiteKingPosition[1]].setBackground(Color.RED);
-        } else if (underCheck(boardState, "Black")) {
-            squares[blackKingPosition[0]][blackKingPosition[1]].setBackground(Color.RED);
-        }
-        highlightSquare(row, col);
-        repaint();
-        revalidate();
+    public void highlightSquare(int row, int col, Color color) {
+        squares[row][col].setBackground(color);
     }
 
-    private boolean checkValidateMove(int fromRow, int fromCol, int toRow, int toCol) {
-        boolean result = false;
-        Piece selectedPiece = boardState[fromRow][fromCol];
-        Piece piece = boardState[toRow][toCol];
-        if (selectedPiece != null && currentPlayer.equals(selectedPiece.color) &&
-                ((boardState[toRow][toCol] == null) || (boardState[toRow][toCol] != null &&
-                !selectedPiece.color.equals(boardState[toRow][toCol].color))) &&
-                selectedPiece.canMove(fromRow, fromCol, toRow, toCol, boardState, moves.getLast() != null ? moves.getLast() : new Move(fromRow, fromCol, toRow, toCol, selectedPiece, null))) {
-            int dir = (toCol-fromCol > 0 ? 1 : -1);
-            if (selectedPiece.name.equals("King") && (Math.abs(toCol - fromCol) > 1)) {
-                if (underCheck(boardState, currentPlayer)) {
-                    return false;
-                }
-                if (!checkValidateMove(fromRow, fromCol, toRow, toCol-dir)) {
-                    return false;
-                }
-                fromCol += dir;
-            }
-            boardState[toRow][toCol] = boardState[fromRow][fromCol];
-            boardState[fromRow][fromCol] = null;
-            if (!underCheck(boardState, currentPlayer)) {
-                result = true;
-            }
-            boardState[fromRow][fromCol] = boardState[toRow][toCol];
-            boardState[toRow][toCol] = piece;
-        }
-        return result;
-    }
-
-    private void movePiece(int fromRow, int fromCol, int toRow, int toCol) {
-        boolean castling = false;
-        moves.add(new Move(fromRow, fromCol, toRow, toCol, boardState[fromRow][fromCol], boardState[toRow][toCol]));
-        
-        int dir = (toCol-fromCol > 0 ? 1 : -1);
-        if (boardState[fromRow][fromCol].name.equals("King") && (Math.abs(toCol - fromCol) == 2)) {
-            castling = !underCheck(boardState, currentPlayer);
-        } else if (boardState[fromRow][fromCol].name.equals("Pawn") && (Math.abs(toCol - fromCol) == 1) && boardState[toRow][toCol] == null) {
-            moves.removeLast();
-            Move move = moves.getLast();
-            boardState[move.toRow][move.toCol] = null;
-            squares[move.toRow][move.toCol].removeAll();
-            moves.add(new Move(fromRow, fromCol, toRow, toCol, boardState[fromRow][fromCol], null));
-        }
-
-        boardState[toRow][toCol] = boardState[fromRow][fromCol];
-        boardState[fromRow][fromCol] = null;
-        boardState[toRow][toCol].haveMove = true;
-
-        squares[toRow][toCol].removeAll();
-        squares[toRow][toCol].add(new JLabel(boardState[toRow][toCol].getIcon()));
-        squares[fromRow][fromCol].removeAll();
-
-        if (castling) {
-            if (dir > 0) {
-                movePiece(fromRow, 7, toRow, 5);
-            } else {
-                movePiece(fromRow, 0, toRow, 3);
-            }
-            moves.removeLast();
-        }
-    }
-
-    private void highlightSquare(int row, int col) {
-        squares[row][col].setBackground(Color.YELLOW);
-    }
-
-    private void clearHighlights() {
+    public void clearHighlights() {
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
                 squares[i][j].setBackground((i + j) % 2 == 0 ? Color.WHITE : this.color);
+            }
+        }
+    }
+
+    public void switchTimers(String color) {
+        if (color.equals("White")) {
+            whiteTimer.stop();
+            blackTimer.start();
+            rightPanel.setBackground(Color.BLACK);
+            blackTimerLabel.setFont(new Font("Arial", Font.BOLD, 20));
+            whiteTimerLabel.setFont(new Font("Arial", Font.BOLD, 10));
+            for (int i = 0; i < rightPanel.getComponentCount(); i++) {
+                rightPanel.getComponent(i).setForeground(Color.WHITE);
+            }
+        } else {
+            blackTimer.stop();
+            whiteTimer.start();
+            rightPanel.setBackground(Color.WHITE);
+            blackTimerLabel.setFont(new Font("Arial", Font.BOLD, 10));
+            whiteTimerLabel.setFont(new Font("Arial", Font.BOLD, 20));
+            for (int i = 0; i < rightPanel.getComponentCount(); i++) {
+                rightPanel.getComponent(i).setForeground(Color.BLACK);
             }
         }
     }

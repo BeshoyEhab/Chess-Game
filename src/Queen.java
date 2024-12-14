@@ -1,6 +1,6 @@
 class Queen extends Piece {
-    public Queen(String color, String iconPath) {
-        super("Queen", color, iconPath);
+    public Queen(String color) {
+        super("Queen", color);
     }
 
     @Override

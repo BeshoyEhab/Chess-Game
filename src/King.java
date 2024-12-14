@@ -1,6 +1,6 @@
 class King extends Piece {
-    public King(String color, String iconPath) {
-        super("King", color, iconPath);
+    public King(String color) {
+        super("King", color);
     }
 
     @Override

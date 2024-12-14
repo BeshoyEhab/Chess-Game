@@ -1,6 +1,6 @@
 class Rook extends Piece {
-    public Rook(String color, String iconPath) {
-        super("Rook", color, iconPath);
+    public Rook(String color) {
+        super("Rook", color);
     }
 
     @Override

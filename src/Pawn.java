@@ -1,6 +1,6 @@
 class Pawn extends Piece {
-    public Pawn(String color, String iconPath) {
-        super("Pawn", color, iconPath);
+    public Pawn(String color) {
+        super("Pawn", color);
     }
 
     @Override
@@ -18,12 +18,11 @@ class Pawn extends Piece {
     public void promote(Piece[][] board, int row, int col, String promoteTo) {
         if (row == 0 || row == 7) {
             Piece piece;
-            String path = basePath + (this.color.equals("White") ? "W" : "B") + promoteTo + ".png";
             piece = switch (promoteTo) {
-                case "Rook" -> new Rook(this.color, path);
-                case "Bishop" -> new Bishop(this.color, path);
-                case "Knight" -> new Knight(this.color, path);
-                case "Queen" -> new Queen(this.color, path);
+                case "Rook" -> new Rook(this.color);
+                case "Bishop" -> new Bishop(this.color);
+                case "Knight" -> new Knight(this.color);
+                case "Queen" -> new Queen(this.color);
                 default -> null;
             };
             assert piece != null;

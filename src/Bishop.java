@@ -1,6 +1,6 @@
 class Bishop extends Piece {
-    public Bishop(String color, String iconPath) {
-        super("Bishop", color, iconPath);
+    public Bishop(String color) {
+        super("Bishop", color);
     }
 
     @Override
