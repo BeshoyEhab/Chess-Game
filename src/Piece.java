@@ -1,4 +1,5 @@
 import javax.swing.*;
+import java.io.File;
 
 // Abstract Piece class
 abstract class Piece {
@@ -6,7 +7,7 @@ abstract class Piece {
     protected String color; // "White" or "Black"
     protected ImageIcon icon;
     protected boolean haveMove = false;
-    protected static String basePath = "assets/";
+    protected static String basePath = System.getProperty("user.dir") + File.separator + "assets" + File.separator;
 
     public Piece(String name, String color) {
         this.name = name;
