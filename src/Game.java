@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -120,8 +122,20 @@ public class Game extends JFrame{
             board = new ChessBoard(new int[]{800, 800}, color, timerDuration);
             updateIcons();
             setCH();
-            moves.add(new Move(-1, -1, -1, -1, null, null));
+            moves.add(new Move(-1, -1, -1, -1, new Pawn("White"), null, timerDuration*600, timerDuration*600));
             board.setVisible(true);
+            
+            // Add KeyListener for undo functionality
+            board.addKeyListener(new KeyAdapter() {
+                @Override
+                public void keyPressed(KeyEvent e) {
+                    if (e.getKeyCode() == KeyEvent.VK_U) {
+                        undo();
+                    }
+                }
+            });
+            board.setFocusable(true);
+            board.requestFocusInWindow();
 
             // Add player name based on color
             JLabel player1NameLabel = new JLabel(player1.getName(), SwingConstants.CENTER);
@@ -184,7 +198,7 @@ public class Game extends JFrame{
                     board.addSquare(row, col, boardState[row][col].getIcon());
                 }
                 board.switchTimers(currentPlayer.getColor());
-                currentPlayer.setColor(currentPlayer.getColor().equals("White") ? "Black" : "White");
+                currentPlayer = currentPlayer.getColor().equals(player1.getColor()) ? player2 : player1;
             }
             selectedPiece = boardState[row][col];
             if (selectedPiece != null) {
@@ -229,7 +243,7 @@ public class Game extends JFrame{
         int[] position = color.equals("White") ? whiteKingPosition : blackKingPosition;
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                if (Pieces[i][j] != null && !Pieces[i][j].color.equals(Pieces[position[0]][position[1]].color) && Pieces[i][j].canMove(i, j, position[0], position[1], Pieces, moves.getLast() != null ? moves.getLast() : new Move(position[0], position[1], i, j, Pieces[position[0]][position[1]], null))) {
+                if (Pieces[i][j] != null && !Pieces[i][j].color.equals(Pieces[position[0]][position[1]].color) && Pieces[i][j].canMove(i, j, position[0], position[1], Pieces, moves.getLast() != null ? moves.getLast() : new Move(position[0], position[1], i, j, Pieces[position[0]][position[1]], null, timerDuration, timerDuration))) {
                     return true;
                 }
             }
@@ -293,7 +307,7 @@ public class Game extends JFrame{
         if (selectedPiece != null && currentPlayer.getColor().equals(selectedPiece.color) &&
                 ((boardState[toRow][toCol] == null) || (boardState[toRow][toCol] != null &&
                         !selectedPiece.color.equals(boardState[toRow][toCol].color))) &&
-                selectedPiece.canMove(fromRow, fromCol, toRow, toCol, boardState, moves.getLast() != null ? moves.getLast() : new Move(fromRow, fromCol, toRow, toCol, selectedPiece, null))) {
+                selectedPiece.canMove(fromRow, fromCol, toRow, toCol, boardState, moves.getLast() != null ? moves.getLast() : new Move(fromRow, fromCol, toRow, toCol, selectedPiece, null, board.whiteTimeRemaining, board.blackTimeRemaining))) {
             int dir = (toCol-fromCol > 0 ? 1 : -1);
             if (selectedPiece.name.equals("King") && (Math.abs(toCol - fromCol) > 1)) {
                 if (underCheck(boardState, currentPlayer.getColor())) {
@@ -317,7 +331,7 @@ public class Game extends JFrame{
 
     private void movePiece(int fromRow, int fromCol, int toRow, int toCol) {
         boolean castling = false;
-        moves.add(new Move(fromRow, fromCol, toRow, toCol, boardState[fromRow][fromCol], boardState[toRow][toCol]));
+        moves.add(new Move(fromRow, fromCol, toRow, toCol, boardState[fromRow][fromCol], boardState[toRow][toCol], board.whiteTimeRemaining, board.blackTimeRemaining));
 
         int dir = (toCol - fromCol > 0 ? 1 : -1);
         if (boardState[fromRow][fromCol].name.equals("King") && (Math.abs(toCol - fromCol) == 2)) {
@@ -327,7 +341,7 @@ public class Game extends JFrame{
             Move move = moves.getLast();
             boardState[move.toRow][move.toCol] = null;
             board.removeSquare(move.toRow, move.toCol);
-            moves.add(new Move(fromRow, fromCol, toRow, toCol, boardState[fromRow][fromCol], null));
+            moves.add(new Move(fromRow, fromCol, toRow, toCol, boardState[fromRow][fromCol], boardState[fromRow][toCol], board.whiteTimeRemaining, board.blackTimeRemaining));
         }
 
         boardState[toRow][toCol] = boardState[fromRow][fromCol];
@@ -351,5 +365,40 @@ public class Game extends JFrame{
         int g = (Color.WHITE.getGreen() + color2.getGreen()) / 2;
         int b = (Color.WHITE.getBlue() + color2.getBlue()) / 2;
         return new Color(r, g, b);
+    }
+    
+    private void undo() {
+        board.clearHighlights();
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                board.removeDot(i, j, boardState[i][j]);
+            }
+        }
+        if (moves.size() > 1) {
+            Move move = moves.removeLast();
+
+            boardState[move.fromRow][move.fromCol] = move.piece;
+            boardState[move.fromRow][move.fromCol].haveMove = move.haveMoved;
+            board.moveSquare(move.toRow, move.toCol, move.fromRow, move.fromCol, move.piece.getIcon());
+            boardState[move.toRow][move.toCol] = move.capturedPiece;
+            board.removeSquare(move.toRow, move.toCol);
+
+            if (move.capturedPiece != null) {
+                board.addSquare(move.toRow, move.toCol, move.capturedPiece.getIcon());
+            }
+
+            if (move.piece.name.equals("Pawn") && (Math.abs(move.toCol - move.fromCol) == 1) && move.capturedPiece == null) {
+                boardState[move.fromRow][move.toCol] = new Pawn(move.piece.color.equals("White") ? "Black" : "White");
+                boardState[move.fromRow][move.toCol].haveMove = true;
+                board.addSquare(move.fromRow, move.toCol, boardState[move.fromRow][move.toCol].getIcon());
+            }
+
+            board.switchTimers(currentPlayer.getColor());
+            currentPlayer = currentPlayer.getColor().equals(player1.getColor()) ? player2 : player1;
+            board.whiteTimeRemaining = moves.getLast().timers[0];
+            board.blackTimeRemaining = moves.getLast().timers[1];
+            board.repaint();
+            board.revalidate();
+        }
     }
 }

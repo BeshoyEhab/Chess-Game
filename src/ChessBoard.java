@@ -3,8 +3,8 @@ import java.awt.*;
 
 public class ChessBoard extends JFrame {
     public JPanel rightPanel = new JPanel(new GridLayout(4, 1));
-    private int whiteTimeRemaining; // 30 minutes in seconds * 10 for accuracy for White
-    private int blackTimeRemaining; // 30 minutes in seconds * 10 for accuracy for Black
+    public int whiteTimeRemaining; // 30 minutes in seconds * 10 for accuracy for White
+    public int blackTimeRemaining; // 30 minutes in seconds * 10 for accuracy for Black
     public Timer whiteTimer;
     public Timer blackTimer;
     private final JLabel whiteTimerLabel = new JLabel("30:00.0", SwingConstants.CENTER);
@@ -25,7 +25,7 @@ public class ChessBoard extends JFrame {
 
         setTitle("Chess Board");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setResizable(true);
+        setResizable(false);
 
         JPanel boardPanel = new JPanel(new GridLayout(BOARD_SIZE, BOARD_SIZE));
         boardPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));

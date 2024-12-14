@@ -3,18 +3,22 @@ public class Move {
     public final int fromCol;
     public final int toRow;
     public final int toCol;
+    public int[] timers;
     final Piece piece;
     final Piece capturedPiece;
     static int movesToStalemate = 0;
+    boolean haveMoved;
 
-    public Move(int fromRow, int fromCol, int toRow, int toCol, Piece piece, Piece capturedPiece) {
+    public Move(int fromRow, int fromCol, int toRow, int toCol, Piece piece, Piece capturedPiece, int timer1, int timer2) {
         this.fromRow = fromRow;
         this.fromCol = fromCol;
         this.toRow = toRow;
         this.toCol = toCol;
         this.piece = piece;
         this.capturedPiece = capturedPiece;
-        if (piece != null && (piece.name.equals("Pawn") || piece.name.equals("King"))) {
+        this.haveMoved = piece.haveMove;
+        this.timers = new int[]{timer1, timer2};
+        if (piece.name.equals("Pawn") || piece.name.equals("King")) {
             movesToStalemate = 0;
         } else {
             movesToStalemate++;
