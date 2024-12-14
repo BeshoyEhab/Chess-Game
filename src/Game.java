@@ -557,8 +557,7 @@ public class Game extends JFrame{
 
             if (move.capturedPiece != null) {
                 board.addSquare(move.toRow, move.toCol, move.capturedPiece.getIcon());
-                currentPlayer.capturedPieces.removeLast();
-                System.out.println(currentPlayer.capturedPieces);
+                if (!currentPlayer.capturedPieces.isEmpty()) currentPlayer.capturedPieces.removeLast();
             }
 
             if (move.piece.name.equals("Pawn") && (Math.abs(move.toCol - move.fromCol) == 1) && move.capturedPiece == null) {
@@ -581,6 +580,7 @@ public class Game extends JFrame{
             board.repaint();
             board.revalidate();
             saveMovesToFile();
+            System.out.println("\n<<<");
         }
     }
 
