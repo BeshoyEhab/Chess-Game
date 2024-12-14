@@ -27,24 +27,24 @@ public class Move {
 
     @Override
     public String toString() {
-        String resutl = piece.name + "(" + (char) ('A' + fromCol) + (8 - fromRow) + "->" + (char) ('A' + toCol) + (8 - toRow) + ")" ;
+        String result = piece.name + "(" + (char) ('A' + fromCol) + (8 - fromRow) + "->" + (char) ('A' + toCol) + (8 - toRow) + ")" ;
         if (piece.name.equals("King")) {
             if (toCol - fromCol == 2) {
-                resutl = "O-O";
+                result = "O-O";
             } else if (toCol - fromCol == -2) {
-                resutl = "O-O-O";
+                result = "O-O-O";
             }
         } else if (piece.name.equals("Pawn")) {
             if (toRow == 0 || toRow == 7) {
-                resutl += " = Queen";
+                result += " = Queen";
             } else if (Math.abs(toCol - fromCol) == 1 && capturedPiece == null) {
-                resutl += " e.p.";
+                result += " e.p.";
             }
         }
         if (capturedPiece != null) {
-            resutl += " x " + capturedPiece.name;
+            result += " x " + capturedPiece.name;
         }
-        return resutl;
+        return result;
     }
 
     public boolean equals(Move move) {
