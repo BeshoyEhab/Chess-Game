@@ -391,6 +391,13 @@ public class Game extends JFrame{
                 boardState[move.fromRow][move.toCol] = new Pawn(move.piece.color.equals("White") ? "Black" : "White");
                 boardState[move.fromRow][move.toCol].haveMove = true;
                 board.addSquare(move.fromRow, move.toCol, boardState[move.fromRow][move.toCol].getIcon());
+            } else if (move.piece.name.equals("King")) {
+                if (move.toCol - move.fromCol == 2) {
+                    movePiece(move.fromRow, 5, move.fromRow, 7);
+                } else if (move.toCol - move.fromCol == -2) {
+                    movePiece(move.fromRow, 3, move.fromRow, 0);
+                }
+                moves.removeLast();
             }
 
             board.switchTimers(currentPlayer.getColor());
