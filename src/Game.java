@@ -4,22 +4,26 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class Game extends JFrame{
-    public ChessBoard board;
     private final Player player1 = new Player();
     private final Player player2 = new Player();
-    private int timerDuration;
+    private int timerDuration = 10;
     private Piece selectedPiece = null;
     private int selectedRow = -1, selectedCol = -1;
     private int[] whiteKingPosition = new int[]{7, 3};
     private int[] blackKingPosition = new int[]{0, 3};
     private final ArrayList<Move> moves = new ArrayList<>();
     private final Piece[][] boardState = Piece.getInitialSetup();
-    private Player currentPlayer;
+    private Player currentPlayer = player1;
     private final Color color = Color.LIGHT_GRAY;
-
+    public ChessBoard board = new ChessBoard(new int[]{800, 800}, color, timerDuration);
     public static void main(String[] args) {
         new Game().startGame();
     }
@@ -38,6 +42,14 @@ public class Game extends JFrame{
             while (true) {
                 if (isCheckmate() && (board.whiteTimer.isRunning() || board.blackTimer.isRunning())) {
                     EventQueue.invokeLater(() -> {
+                        Path path = Paths.get("lastSave.txt");
+                        try {
+                            Files.deleteIfExists(path);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        for (int i = 0; i < moves.size(); i++)
+                            moves.removeLast();
                         board.whiteTimer.stop();
                         board.blackTimer.stop();
                         JOptionPane.showMessageDialog(this, (currentPlayer.getColor().equals("White") ? "Black" : "White") + " has won!");
@@ -55,10 +67,17 @@ public class Game extends JFrame{
                     break;
                 } else if (isStalemate() && (board.whiteTimer.isRunning() || board.blackTimer.isRunning())) {
                     EventQueue.invokeLater(() -> {
+                        Path path = Paths.get("lastSave.txt");
+                        try {
+                            Files.deleteIfExists(path);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        for (int i = 0; i < moves.size(); i++)
+                            moves.removeLast();
                         board.whiteTimer.stop();
                         board.blackTimer.stop();
                         JOptionPane.showMessageDialog(this, "It's stalemate!");
-
                         int restartOption = JOptionPane.showConfirmDialog(this, "Do you want to restart the game?", "Restart Game", JOptionPane.YES_NO_OPTION);
                         boolean restartChoice = restartOption == JOptionPane.YES_OPTION;
 
@@ -82,27 +101,42 @@ public class Game extends JFrame{
     }
 
     private void startGame() {
+        Path path = Paths.get("lastSave.txt");
+        if (Files.exists(path)) {
+            int choice = JOptionPane.showConfirmDialog(this, "A saved game was found. Do you want to continue?", "Continue From Last Game", JOptionPane.YES_NO_OPTION);
+            if (choice == JOptionPane.YES_OPTION) {
+                restoreMovesFromFile();
+            } else {
+                initializeNewGame();
+            }
+        } else {
+            initializeNewGame();
+        }
+        initGame();
+    }
+    
+    private void initializeNewGame() {
         // Prompt for player details
         player1.setName(JOptionPane.showInputDialog(this, "Player 1 name:"));
         if (player1.getName() == null || player1.getName().trim().isEmpty()) {
             player1.setName("Player 1");
         }
-
+    
         player2.setName(JOptionPane.showInputDialog(this, "Player 2 name:"));
         if (player2.getName() == null || player2.getName().trim().isEmpty()) {
             player2.setName("Player 2");
         }
-
+    
         Object[] options = {"White", "Black"};
         player1.setColor((String) JOptionPane.showInputDialog(this, player1.getName() + " color:", "Color Selection",
                 JOptionPane.PLAIN_MESSAGE, null, options, "White"));
-
+    
         if (player1.getColor() == null) {
             player1.setColor("White"); // Default to White if no selection
         }
-
+    
         player2.setColor(player1.getColor().equals("White") ? "Black" : "White");
-
+    
         // Prompt for timer duration
         String timerInput = JOptionPane.showInputDialog(this, "Enter timer duration in minutes (default 10):");
         try {
@@ -111,9 +145,8 @@ public class Game extends JFrame{
         } catch (NumberFormatException e) {
             timerDuration = 10; // Default timer duration
         }
-
+    
         currentPlayer = player1;
-        initGame();
     }
 
     private void initGame() {
@@ -122,9 +155,8 @@ public class Game extends JFrame{
             board = new ChessBoard(new int[]{800, 800}, color, timerDuration);
             updateIcons();
             setCH();
-            moves.add(new Move(-1, -1, -1, -1, new Pawn("White"), null, timerDuration*600, timerDuration*600));
             board.setVisible(true);
-            
+
             // Add KeyListener for undo functionality
             board.addKeyListener(new KeyAdapter() {
                 @Override
@@ -151,6 +183,7 @@ public class Game extends JFrame{
                 board.rightPanel.add(player2NameLabel);
             }
 
+            board.switchTimers(currentPlayer.getColor().equals("White") ? "Black" : "White");
             checkForCheckmate();
         });
     }
@@ -191,7 +224,7 @@ public class Game extends JFrame{
             // Attempt to move the selected piece
             if (checkValidateMove(selectedRow, selectedCol, row, col)) {
                 movePiece(selectedRow, selectedCol, row, col);
-                System.out.print(moves.size() % 2 == 0 ? (moves.size()+1)/2 + ") " + moves.getLast().toString() : "\t | " + moves.getLast().toString() + "\n");
+                System.out.print(moves.size() % 2 == 1 ? (moves.size()+1)/2 + ") " + moves.getLast().toString() : "\t | " + moves.getLast().toString() + "\n");
                 if (selectedPiece.name.equals("Pawn") && (row == 0 || row == 7)) {
                     selectedPiece.promote(boardState, row, col, "Queen");
                     board.removeSquare(row, col);
@@ -243,7 +276,7 @@ public class Game extends JFrame{
         int[] position = color.equals("White") ? whiteKingPosition : blackKingPosition;
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                if (Pieces[i][j] != null && !Pieces[i][j].color.equals(Pieces[position[0]][position[1]].color) && Pieces[i][j].canMove(i, j, position[0], position[1], Pieces, moves.getLast() != null ? moves.getLast() : new Move(position[0], position[1], i, j, Pieces[position[0]][position[1]], null, timerDuration, timerDuration))) {
+                if (Pieces[i][j] != null && !Pieces[i][j].color.equals(Pieces[position[0]][position[1]].color) && Pieces[i][j].canMove(i, j, position[0], position[1], Pieces,(!moves.isEmpty() && moves.getLast() != null) ? moves.getLast() : new Move(position[0], position[1], i, j, Pieces[position[0]][position[1]], null, timerDuration, timerDuration))) {
                     return true;
                 }
             }
@@ -286,6 +319,7 @@ public class Game extends JFrame{
         }
         return true;
     }
+
     private void assistant() {
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
@@ -299,7 +333,6 @@ public class Game extends JFrame{
             }
         }
     }
-
     private boolean checkValidateMove(int fromRow, int fromCol, int toRow, int toCol) {
         boolean result = false;
         Piece selectedPiece = boardState[fromRow][fromCol];
@@ -307,7 +340,7 @@ public class Game extends JFrame{
         if (selectedPiece != null && currentPlayer.getColor().equals(selectedPiece.color) &&
                 ((boardState[toRow][toCol] == null) || (boardState[toRow][toCol] != null &&
                         !selectedPiece.color.equals(boardState[toRow][toCol].color))) &&
-                selectedPiece.canMove(fromRow, fromCol, toRow, toCol, boardState, moves.getLast() != null ? moves.getLast() : new Move(fromRow, fromCol, toRow, toCol, selectedPiece, null, board.whiteTimeRemaining, board.blackTimeRemaining))) {
+                selectedPiece.canMove(fromRow, fromCol, toRow, toCol, boardState, (!moves.isEmpty() && moves.getLast() != null) ? moves.getLast() : new Move(fromRow, fromCol, toRow, toCol, selectedPiece, null, board.whiteTimeRemaining, board.blackTimeRemaining))) {
             int dir = (toCol-fromCol > 0 ? 1 : -1);
             if (selectedPiece.name.equals("King") && (Math.abs(toCol - fromCol) > 1)) {
                 if (underCheck(boardState, currentPlayer.getColor())) {
@@ -343,6 +376,8 @@ public class Game extends JFrame{
             board.removeSquare(move.toRow, move.toCol);
             moves.add(new Move(fromRow, fromCol, toRow, toCol, boardState[fromRow][fromCol], boardState[fromRow][toCol], board.whiteTimeRemaining, board.blackTimeRemaining));
         }
+        if (boardState[toRow][toCol] != null)
+            currentPlayer.capturedPieces.add(boardState[toRow][toCol]);
 
         boardState[toRow][toCol] = boardState[fromRow][fromCol];
         boardState[fromRow][fromCol] = null;
@@ -358,6 +393,7 @@ public class Game extends JFrame{
             }
             moves.removeLast();
         }
+        saveMovesToFile();
     }
 
     private Color calculateMidColor(Color color2) {
@@ -366,7 +402,7 @@ public class Game extends JFrame{
         int b = (Color.WHITE.getBlue() + color2.getBlue()) / 2;
         return new Color(r, g, b);
     }
-    
+
     private void undo() {
         board.clearHighlights();
         for (int i = 0; i < 8; i++) {
@@ -374,17 +410,18 @@ public class Game extends JFrame{
                 board.removeDot(i, j, boardState[i][j]);
             }
         }
-        if (moves.size() > 1) {
+        if (!moves.isEmpty()) {
             Move move = moves.removeLast();
 
             boardState[move.fromRow][move.fromCol] = move.piece;
             boardState[move.fromRow][move.fromCol].haveMove = move.haveMoved;
             board.moveSquare(move.toRow, move.toCol, move.fromRow, move.fromCol, move.piece.getIcon());
             boardState[move.toRow][move.toCol] = move.capturedPiece;
-            board.removeSquare(move.toRow, move.toCol);
 
             if (move.capturedPiece != null) {
                 board.addSquare(move.toRow, move.toCol, move.capturedPiece.getIcon());
+                currentPlayer.capturedPieces.removeLast();
+                System.out.println(currentPlayer.capturedPieces);
             }
 
             if (move.piece.name.equals("Pawn") && (Math.abs(move.toCol - move.fromCol) == 1) && move.capturedPiece == null) {
@@ -402,10 +439,80 @@ public class Game extends JFrame{
 
             board.switchTimers(currentPlayer.getColor());
             currentPlayer = currentPlayer.getColor().equals(player1.getColor()) ? player2 : player1;
-            board.whiteTimeRemaining = moves.getLast().timers[0];
-            board.blackTimeRemaining = moves.getLast().timers[1];
+            board.whiteTimeRemaining = moves.isEmpty() ? timerDuration*600 :moves.getLast().timers[0];
+            board.blackTimeRemaining = moves.isEmpty() ? timerDuration*600 :moves.getLast().timers[1];
             board.repaint();
             board.revalidate();
+            saveMovesToFile();
+        }
+    }
+
+    private void restoreMovesFromFile() {
+        Path path = Paths.get("lastSave.txt");
+        try {
+            java.util.List<String> lines = Files.readAllLines(path);
+            for (String line : lines) {
+                String[] parts = line.split(",");
+                if (parts.length < 6) continue;
+                int fromRow = Integer.parseInt(parts[0].trim());
+                int fromCol = Integer.parseInt(parts[1].trim());
+                int toRow = Integer.parseInt(parts[2].trim());
+                int toCol = Integer.parseInt(parts[3].trim());
+                int whiteTime = Integer.parseInt(parts[4].trim());
+                int blackTime = Integer.parseInt(parts[5].trim());
+                moves.add(new Move(fromRow, fromCol, toRow, toCol, boardState[fromRow][fromCol], boardState[toRow][toCol], whiteTime, blackTime));
+                boardState[toRow][toCol] = boardState[fromRow][fromCol];
+                boardState[fromRow][fromCol] = null;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        readPlayers();
+        if (!moves.isEmpty()) {
+            Move lastMove = moves.getLast();
+            board.whiteTimeRemaining = lastMove.timers[0];
+            board.blackTimeRemaining = lastMove.timers[1];
+            currentPlayer = moves.size() % 2 == 0 ? player1 : player2;
+        }
+    }
+    private void saveMovesToFile() {
+        try {
+            new FileWriter("lastSave.txt", false).close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        for (Move move : moves) {
+            try (FileWriter writer = new FileWriter("lastSave.txt", true)) {
+                writer.write( move.fromRow + "," + move.fromCol + "," + move.toRow + "," + move.toCol + "," + move.timers[0] + "," + move.timers[1] + "\n");
+            } catch (java.io.IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        savePlayers();
+    }
+
+    private void savePlayers() {
+        try (FileWriter writer = new FileWriter("players.txt", false)) {
+            writer.write(player1.getName() + "," + player1.getColor() + "," + timerDuration + "\n");
+            writer.write(player2.getName() + "," + player2.getColor() + "\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void readPlayers() {
+        Path path = Paths.get("players.txt");
+        try {
+            java.util.List<String> lines = Files.readAllLines(path);
+            String[] parts = lines.getFirst().split(",");
+            player1.setName(parts[0].trim());
+            player1.setColor(parts[1].trim());
+            timerDuration = Integer.parseInt(parts[2].trim());
+            parts = lines.get(1).split(",");
+            player2.setName(parts[0].trim());
+            player2.setColor(parts[1].trim());
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 }
