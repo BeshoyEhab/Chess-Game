@@ -6,75 +6,113 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.ArrayList;
 
-/**
- * Represents a chess game application with a graphical user interface.
- * Handles the chess game logic, board rendering, player interactions, and game states like checkmate and stalemate.
- */
+/// Represents a complete chess game application with a graphical user interface.
+/// This class manages the entire chess game lifecycle, including:
+/// - Player management and initialization
+/// - Board state tracking
+/// - Move validation and execution
+/// - Game state detection (checkmate, stalemate)
+/// - Timer management
+/// - Saving and restoring game progress
+///
+/// The game supports features such as:
+/// - Custom player names and colors
+/// - Configurable game timer
+/// - Piece movement and capture
+/// - Special moves (castling, en passant, pawn promotion)
+/// - Undo functionality
+/// - Game state persistence
+///
+/// @author Team 57
+/// @version 1.0
+/// @since 2024-12-15
 public class Game extends JFrame{
 
     /**
-     * The first player in the chess game. Contains player details like name and color.
+     * Represents the first player in the chess game.
+     * Stores player-specific information like name and color.
+     *
+     * @see Player
      */
     private final Player player1 = new Player();
 
     /**
-     * The second player in the chess game. Contains player details like name and color.
+     * Represents the second player in the chess game.
+     * Stores player-specific information like name and color.
+     *
+     * @see Player
      */
     private final Player player2 = new Player();
 
-    /**
-     * Duration of the chess timer for each player in minutes.
-     */
+    /// Defines the duration of the game timer for each player in minutes.
+    /// Default value is 10 minutes.
+    /// Can be configured during game initialization.
     private int timerDuration = 10;
 
     /**
-     * The currently selected chess piece, or null if no piece is selected.
+     * Tracks the currently selected chess piece during user interaction.
+     * Will be null if no piece is currently selected.
      */
     private Piece selectedPiece = null;
 
     /**
-     * The row and column indices of the currently selected chess piece.
+     * Stores the row and column indices of the currently selected chess piece.
+     * Default values are -1 when no piece is selected.
      */
     private int selectedRow = -1, selectedCol = -1;
 
     /**
-     * Current position of the white king on the chessboard, stored as a row and column index.
+     * Maintains the current position of the white king on the chessboard.
+     * Updated dynamically during the game to track king's location.
      */
     private int[] whiteKingPosition = new int[]{7, 3};
 
     /**
-     * Current position of the black king on the chessboard, stored as a row and column index.
+     * Maintains the current position of the black king on the chessboard.
+     * Updated dynamically during the game to track king's location.
      */
     private int[] blackKingPosition = new int[]{0, 3};
 
     /**
-     * A list of all moves made in the game, stored as Move objects.
+     * Stores a chronological list of all moves made during the game.
+     * Each move is represented as a {@link Move} object, allowing game replay and state restoration.
      */
     private final ArrayList<Move> moves = new ArrayList<>();
 
     /**
-     * Two-dimensional array representing the current state of the chessboard.
-     * Stores Piece objects for each square on the board.
+     * Represents the current state of the chessboard as a 2D array of chess pieces.
+     * Initialized with the standard chess piece setup using {@link Piece#getInitialSetup()}.
      */
     private final Piece[][] boardState = Piece.getInitialSetup();
 
     /**
-     * The player whose turn it is to make a move.
+     * Tracks the current player whose turn it is to make a move.
+     * Alternates between {@link #player1} and {@link #player2} during gameplay.
      */
     private Player currentPlayer = player1;
 
     /**
-     * The primary color used for one set of chessboard squares in the UI.
+     * Defines the primary color used for one set of chessboard squares in the UI.
+     * Defaults to light gray to provide visual contrast.
      */
     private final Color color = Color.LIGHT_GRAY;
 
     /**
-     * Represents the graphical user interface for the chessboard and handles interactions.
+     * Manages the graphical user interface for the chessboard and handles user interactions.
+     * Initialized with custom board dimensions, color, and timer duration.
      */
     public ChessBoard board = new ChessBoard(new int[]{800, 800}, color, timerDuration);
-        public static void main(String[] args) {
-            new Game().startGame();
-        }
+
+    /**
+     * Main entry point for the chess game application.
+     * Launches a new game instance.
+     *
+     * @param args Command-line arguments (not used in this application)
+     */
+    public static void main(String[] args) {
+        new Game().startGame();
+    }
+
 
     /**
      * Updates the icons (piece images) on the chessboard based on the current board state.

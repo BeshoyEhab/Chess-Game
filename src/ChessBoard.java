@@ -1,30 +1,63 @@
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Represents a graphical chess board implementation using Java Swing.
- * Manages the visual board, timer functionality, and board state.
- */
+/// A graphical chess board implementation using Java Swing that manages
+/// the visual board, player timers, and game state.
+///
+/// This class provides a comprehensive chess board interface with features including:
+///
+///  - 8x8 grid representation of the chess board
+///
+///  - Player time tracking with countdown timers
+///
+///  - Captured pieces display
+///
+///  - Visual board manipulation methods
+///
+/// @author Team 57
+/// @version 1.0
+/// @since 2024-12-15
 public class ChessBoard extends JFrame {
-    /** Panel containing timer and other right-side components. */
+    /**
+     * Panel for displaying right-side game components like timers and captured pieces.
+     * Uses a GridLayout with 6 rows to organize components vertically.
+     */
     public JPanel rightPanel = new JPanel(new GridLayout(6, 1));
 
-    /** Remaining time for White player in deciseconds (1 decisecond = 0.1 seconds). */
+    /**
+     * Tracks the remaining time for the White player in deciseconds.
+     * One decisecond represents 0.1 seconds, allowing precise time tracking.
+     */
     public int whiteTimeRemaining;
 
-    /** Remaining time for Black player in deciseconds (1 decisecond = 0.1 seconds). */
+    /**
+     * Tracks the remaining time for the Black player in deciseconds.
+     * One decisecond represents 0.1 seconds, allowing precise time tracking.
+     */
     public int blackTimeRemaining;
 
-    /** Timer for tracking White player's time. */
+    /**
+     * Swing Timer for tracking and updating the White player's remaining time.
+     * Updates every decisecond and handles time-out scenarios.
+     */
     public Timer whiteTimer;
 
-    /** Timer for tracking Black player's time. */
+    /**
+     * Swing Timer for tracking and updating the Black player's remaining time.
+     * Updates every decisecond and handles time-out scenarios.
+     */
     public Timer blackTimer;
 
-    /** Panel displaying captured pieces for the white player. */
+    /**
+     * Panel for displaying pieces captured by the White player.
+     * Uses a 2x8 GridLayout to represent captured pieces.
+     */
     public JPanel whiteCapturedPanel = new JPanel(new GridLayout(2, 8));
 
-    /** Panel displaying captured pieces for the black player. */
+    /**
+     * Panel for displaying pieces captured by the Black player.
+     * Uses a 2x8 GridLayout to represent captured pieces.
+     */
     public JPanel blackCapturedPanel = new JPanel(new GridLayout(2, 8));
 
     /** Label displaying White player's remaining time. */
@@ -46,11 +79,11 @@ public class ChessBoard extends JFrame {
     private final int[] dims;
 
     /**
-     * Constructs a new ChessBoard with specified dimensions, color, and game duration.
+     * Constructs a new ChessBoard with custom configuration.
      *
-     * @param dims Array containing board width and height
-     * @param color Background color for alternating squares
-     * @param minutes Total game time for each player in minutes
+     * @param dims Array containing board width and height in pixels
+     * @param color Background color for alternating board squares
+     * @param minutes Total game time allocated for each player in minutes
      */
     public ChessBoard(int[] dims, Color color, int minutes) {
         this.color = color;
@@ -119,10 +152,12 @@ public class ChessBoard extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    /**
-     * Initializes game timers for White and Black players.
-     * Sets up timer behavior, including countdown and time-out handling.
-     */
+    /// Initializes game timers for both players with countdown and time-out logic.
+    /// The White player's timer starts first by default.
+    /// Timer behavior:
+    /// - Countdown occurs every decisecond
+    /// - Displays a message when a player runs out of time
+    /// - Stops the corresponding player's timer upon time exhaustion
     private void initTimers() {
         whiteTimer = new Timer(100, e -> {
             if (whiteTimeRemaining > 0) {
@@ -148,9 +183,10 @@ public class ChessBoard extends JFrame {
     }
 
     /**
-     * Updates a timer label with formatted time display.
+     * Updates a timer label with a formatted time display.
+     * Converts deciseconds into a minutes:seconds.tenths format.
      *
-     * @param label Label to be updated
+     * @param label JLabel to be updated with the current time
      * @param timeInSeconds Remaining time in deciseconds
      */
     private void updateTimerLabel(JLabel label, int timeInSeconds) {
@@ -163,10 +199,11 @@ public class ChessBoard extends JFrame {
 
     /**
      * Creates a chess board square with alternating colors.
+     * Squares are colored white or the specified custom color based on their position.
      *
      * @param i Row index of the square
      * @param j Column index of the square
-     * @return A JPanel representing a chess board square
+     * @return A JPanel representing a chess board square with appropriate background
      */
     private JPanel setSquare(int i, int j) {
         JPanel square = new JPanel(new BorderLayout());
@@ -176,22 +213,24 @@ public class ChessBoard extends JFrame {
     }
 
     /**
-     * Retrieves a specific square from the chess board.
+     * Retrieves a specific square from the chess board grid.
      *
-     * @param i Row index of the square
-     * @param j Column index of the square
-     * @return JPanel representing the requested square
+     * @param i Row index of the desired square
+     * @param j Column index of the desired square
+     * @return JPanel representing the requested board square
+     * @throws IndexOutOfBoundsException if indices are outside the board's range
      */
     public JPanel getSquare(int i, int j) {
         return squares[i][j];
     }
 
     /**
-     * Adds a dot marker to a specific board square.
+     * Adds a dot marker to a specified board square.
+     * Useful for highlighting possible moves or indicating special squares.
      *
-     * @param row Row index of the square
-     * @param col Column index of the square
-     * @param color Color of the dot
+     * @param row Row index of the target square
+     * @param col Column index of the target square
+     * @param color Color of the dot to be displayed
      */
     public void addDot(int row, int col, Color color) {
         squares[row][col].setLayout(new BorderLayout());
@@ -227,12 +266,13 @@ public class ChessBoard extends JFrame {
 
     /**
      * Moves a piece from one square to another on the board.
+     * Removes the piece from the source square and places it in the destination square.
      *
-     * @param fromRow Source row index
-     * @param fromCol Source column index
-     * @param toRow Destination row index
-     * @param toCol Destination column index
-     * @param icon Piece's icon to be displayed
+     * @param fromRow Source square's row index
+     * @param fromCol Source square's column index
+     * @param toRow Destination square's row index
+     * @param toCol Destination square's column index
+     * @param icon ImageIcon representing the piece being moved
      */
     public void moveSquare(int fromRow, int fromCol, int toRow, int toCol, ImageIcon icon) {
         removeSquare(toRow, toCol);
@@ -278,6 +318,7 @@ public class ChessBoard extends JFrame {
 
     /**
      * Switches active timers between White and Black players.
+     * Also updates the visual representation to indicate the current player's turn.
      *
      * @param color Color of the player whose turn is ending
      */

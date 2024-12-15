@@ -1,8 +1,30 @@
+/**
+ * Represents a Bishop piece in a chess game.
+ * The Bishop moves diagonally any number of squares, as long as the path is clear.
+ */
 class Bishop extends Piece {
+
+    /**
+     * Constructs a Bishop with the specified color.
+     *
+     * @param color the color of the Bishop ("White" or "Black").
+     */
     public Bishop(String color) {
         super("Bishop", color);
     }
 
+    /**
+     * Determines if the Bishop can move from its current position to a target position
+     * on the chessboard according to chess rules.
+     *
+     * @param fromRow the starting row of the Bishop.
+     * @param fromCol the starting column of the Bishop.
+     * @param toRow   the target row for the Bishop.
+     * @param toCol   the target column for the Bishop.
+     * @param board   the current state of the chessboard represented as a 2D array of Pieces.
+     * @param move    the last move made on the board, though not required for the Bishop's movement.
+     * @return true if the move is valid, false otherwise.
+     */
     @Override
     public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board, Move move) {
         // Bishop moves diagonally: |rowDiff| == |colDiff|
