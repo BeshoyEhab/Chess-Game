@@ -1,0 +1,2 @@
+bbbb ,White,10
+Player 2,Black
