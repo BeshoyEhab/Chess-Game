@@ -83,7 +83,7 @@ public class Game extends JFrame{
      * Represents the current state of the chessboard as a 2D array of chess pieces.
      * Initialized with the standard chess piece setup using {@link Piece#getInitialSetup()}.
      */
-    private final Piece[][] boardState = Piece.getInitialSetup();
+    private Piece[][] boardState = Piece.getInitialSetup();
 
     /**
      * Tracks the current player whose turn it is to make a move.
@@ -152,7 +152,7 @@ public class Game extends JFrame{
 
                             if (restartChoice) {
                                 board.dispose();
-                                initGame();
+                                resetGame();
                             } else {
                                 System.exit(0);
                             }
@@ -176,7 +176,7 @@ public class Game extends JFrame{
 
                             if (restartChoice) {
                                 board.dispose();
-                                initGame();
+                                resetGame();
                             } else {
                                 System.exit(0);
                             }
@@ -738,5 +738,18 @@ public class Game extends JFrame{
         // Repaint the right panel to reflect changes
         board.rightPanel.revalidate();
         board.rightPanel.repaint();
+    }
+
+    /**
+     * Resets the game board and state to its initial configuration.
+     */
+    private void resetGame() {
+        board.removeAll();
+        boardState = Piece.getInitialSetup();
+        player1.capturedPieces.clear();
+        player2.capturedPieces.clear();
+        moves.clear();
+        currentPlayer = player1;
+        initGame();
     }
 }
