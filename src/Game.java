@@ -103,6 +103,8 @@ public class Game extends JFrame{
      */
     public ChessBoard board = new ChessBoard(new int[]{800, 800}, color, timerDuration);
 
+    public Game() {}
+
     /**
      * Main entry point for the chess game application.
      * Launches a new game instance.
@@ -112,7 +114,6 @@ public class Game extends JFrame{
     public static void main(String[] args) {
         new Game().startGame();
     }
-
 
     /**
      * Updates the icons (piece images) on the chessboard based on the current board state.
