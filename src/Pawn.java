@@ -12,7 +12,7 @@ class Pawn extends Piece {
         return (toCol == fromCol && board[toRow][toCol] == null && toRow - fromRow == direction) //Common move
                 || (toRow - fromRow == direction && Math.abs(toCol - fromCol) == 1 && board[toRow][toCol] != null) //Eating the piece
                 || (toRow - fromRow == 2 * direction && fromCol == toCol && !this.haveMove && board[fromRow + direction][toCol] == null && board[fromRow + 2 * direction][toCol] == null) //Special move in the first move only
-                || (move.piece != null && move.piece.name.equals("Pawn") && board[toRow][toCol] == null && move.toRow-fromRow == 0 && toCol == move.fromCol && toRow-fromRow == direction && Math.abs(move.fromRow - move.toRow) == 2); //En passing
+                || (move.piece.name.equals("Pawn") && board[toRow][toCol] == null && move.toRow-fromRow == 0 && toCol == move.fromCol && toRow-fromRow == direction && Math.abs(move.fromRow - move.toRow) == 2); //En passing
     }
 
     public void promote(Piece[][] board, int row, int col, String promoteTo) {

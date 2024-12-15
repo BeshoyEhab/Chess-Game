@@ -459,15 +459,14 @@ public class Game extends JFrame{
                 ((boardState[toRow][toCol] == null) || (boardState[toRow][toCol] != null &&
                         !selectedPiece.color.equals(boardState[toRow][toCol].color))) &&
                 selectedPiece.canMove(fromRow, fromCol, toRow, toCol, boardState, (!moves.isEmpty() && moves.getLast() != null) ? moves.getLast() : new Move(fromRow, fromCol, toRow, toCol, selectedPiece, null, board.whiteTimeRemaining, board.blackTimeRemaining))) {
-            int dir = (toCol-fromCol > 0 ? 1 : -1);
-            if (selectedPiece.name.equals("King") && (Math.abs(toCol - fromCol) > 1)) {
+            if (selectedPiece.name.equals("King") && (Math.abs(toCol - fromCol) == 2)) {
+                int dir = (toCol-fromCol > 0 ? 1 : -1);
                 if (underCheck(boardState, currentPlayer.getColor())) {
                     return false;
                 }
                 if (!checkValidateMove(fromRow, fromCol, toRow, toCol-dir)) {
                     return false;
                 }
-                fromCol += dir;
             }
             boardState[toRow][toCol] = boardState[fromRow][fromCol];
             boardState[fromRow][fromCol] = null;
@@ -497,14 +496,16 @@ public class Game extends JFrame{
         if (boardState[fromRow][fromCol].name.equals("King") && (Math.abs(toCol - fromCol) == 2)) {
             castling = !underCheck(boardState, currentPlayer.getColor());
         } else if (boardState[fromRow][fromCol].name.equals("Pawn") && (Math.abs(toCol - fromCol) == 1) && boardState[toRow][toCol] == null) {
+            currentPlayer.capturedPieces.add(boardState[fromRow][toCol]);
             moves.removeLast();
             Move move = moves.getLast();
             boardState[move.toRow][move.toCol] = null;
             board.removeSquare(move.toRow, move.toCol);
             moves.add(new Move(fromRow, fromCol, toRow, toCol, boardState[fromRow][fromCol], boardState[fromRow][toCol], board.whiteTimeRemaining, board.blackTimeRemaining));
-        }
-        if (boardState[toRow][toCol] != null)
+        } else if (boardState[toRow][toCol] != null) {
             currentPlayer.capturedPieces.add(boardState[toRow][toCol]);
+        }
+        updateCapturedPiecesPanel();
 
         boardState[toRow][toCol] = boardState[fromRow][fromCol];
         boardState[fromRow][fromCol] = null;
@@ -548,6 +549,7 @@ public class Game extends JFrame{
             }
         }
         if (!moves.isEmpty()) {
+            Player player = currentPlayer.getColor().equals(player1.getColor()) ? player2 : player1;
             Move move = moves.removeLast();
 
             boardState[move.fromRow][move.fromCol] = move.piece;
@@ -555,33 +557,41 @@ public class Game extends JFrame{
             board.moveSquare(move.toRow, move.toCol, move.fromRow, move.fromCol, move.piece.getIcon());
             boardState[move.toRow][move.toCol] = move.capturedPiece;
 
-            if (move.capturedPiece != null) {
-                board.addSquare(move.toRow, move.toCol, move.capturedPiece.getIcon());
-                if (!currentPlayer.capturedPieces.isEmpty()) currentPlayer.capturedPieces.removeLast();
-            }
-
             if (move.piece.name.equals("Pawn") && (Math.abs(move.toCol - move.fromCol) == 1) && move.capturedPiece == null) {
                 boardState[move.fromRow][move.toCol] = new Pawn(move.piece.color.equals("White") ? "Black" : "White");
                 boardState[move.fromRow][move.toCol].haveMove = true;
                 board.addSquare(move.fromRow, move.toCol, boardState[move.fromRow][move.toCol].getIcon());
+                player.capturedPieces.removeLast();
             } else if (move.piece.name.equals("King")) {
                 if (move.toCol - move.fromCol == 2) {
-                    movePiece(move.fromRow, 5, move.fromRow, 7);
+                    boardState[move.fromRow][7] = new Rook(move.piece.color);
+                    boardState[move.fromRow][5] = null;
+                    boardState[move.fromRow][7].haveMove = true;
+                    board.moveSquare(move.toRow, 5, move.fromRow, 7, boardState[move.fromRow][7].getIcon());
                 } else if (move.toCol - move.fromCol == -2) {
-                    movePiece(move.fromRow, 3, move.fromRow, 0);
+                    boardState[move.fromRow][0] = new Rook(move.piece.color);
+                    boardState[move.fromRow][3] = null;
+                    boardState[move.fromRow][0].haveMove = true;
+                    board.moveSquare(move.toRow, 3, move.fromRow, 0, boardState[move.fromRow][0].getIcon());
                 }
-                moves.removeLast();
             }
+
+            if (move.capturedPiece != null) {
+                board.addSquare(move.toRow, move.toCol, move.capturedPiece.getIcon());
+                player.capturedPieces.removeLast();
+            }
+            updateCapturedPiecesPanel();
 
             board.switchTimers(currentPlayer.getColor());
             currentPlayer = currentPlayer.getColor().equals(player1.getColor()) ? player2 : player1;
             board.whiteTimeRemaining = moves.isEmpty() ? timerDuration*600 :moves.getLast().timers[0];
             board.blackTimeRemaining = moves.isEmpty() ? timerDuration*600 :moves.getLast().timers[1];
-            board.repaint();
-            board.revalidate();
             saveMovesToFile();
             System.out.println("\n<<<");
+            handleClick(move.fromRow, move.fromCol);
         }
+        board.repaint();
+        board.revalidate();
     }
 
     /**
@@ -589,6 +599,7 @@ public class Game extends JFrame{
      */
     private void restoreMovesFromFile() {
         Path path = Paths.get("lastSave.txt");
+        readPlayers();
         try {
             java.util.List<String> lines = Files.readAllLines(path);
             for (String line : lines) {
@@ -601,20 +612,25 @@ public class Game extends JFrame{
                 int whiteTime = Integer.parseInt(parts[4].trim());
                 int blackTime = Integer.parseInt(parts[5].trim());
                 moves.add(new Move(fromRow, fromCol, toRow, toCol, boardState[fromRow][fromCol], boardState[toRow][toCol], whiteTime, blackTime));
+                if (boardState[toRow][toCol] != null)
+                    currentPlayer.capturedPieces.add(boardState[toRow][toCol]);
+                currentPlayer = currentPlayer.getColor().equals(player1.getColor()) ? player2 : player1;
                 boardState[toRow][toCol] = boardState[fromRow][fromCol];
+                boardState[toRow][toCol].haveMove = true;
                 boardState[fromRow][fromCol] = null;
             }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        readPlayers();
         if (!moves.isEmpty()) {
             Move lastMove = moves.getLast();
             board.whiteTimeRemaining = lastMove.timers[0];
             board.blackTimeRemaining = lastMove.timers[1];
             currentPlayer = moves.size() % 2 == 0 ? player1 : player2;
+            updateCapturedPiecesPanel();
         }
     }
+
     /**
      * Saves the current game state and moves to a file for later restoration.
      */
@@ -663,5 +679,26 @@ public class Game extends JFrame{
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    /**
+     * Updates the display of captured pieces in the right panel.
+     */
+    private void updateCapturedPiecesPanel() {
+        board.whiteCapturedPanel.removeAll();
+        for (Piece piece : player1.capturedPieces) {
+            JLabel pieceIcon = new JLabel(new ImageIcon(piece.getIcon().getImage().getScaledInstance(20,20, Image.SCALE_SMOOTH)));
+            board.whiteCapturedPanel.add(pieceIcon);
+        }
+
+        board.blackCapturedPanel.removeAll();
+        for (Piece piece : player2.capturedPieces) {
+            JLabel pieceIcon = new JLabel(new ImageIcon(piece.getIcon().getImage().getScaledInstance(20,20, Image.SCALE_SMOOTH)));
+            board.blackCapturedPanel.add(pieceIcon);
+        }
+
+        // Repaint the right panel to reflect changes
+        board.rightPanel.revalidate();
+        board.rightPanel.repaint();
     }
 }

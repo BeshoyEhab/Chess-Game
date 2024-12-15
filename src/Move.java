@@ -1,14 +1,50 @@
+/**
+ * Represents a chess move with detailed information about the piece's movement.
+ * Tracks the source and destination coordinates, piece information, and move-related states.
+ */
 public class Move {
+    /** Row index of the piece's starting position. */
     public final int fromRow;
+
+    /** Column index of the piece's starting position. */
     public final int fromCol;
+
+    /** Row index of the piece's destination position. */
     public final int toRow;
+
+    /** Column index of the piece's destination position. */
     public final int toCol;
+
+    /** Array to store timers associated with the move. */
     public int[] timers;
+
+    /** The piece being moved. */
     final Piece piece;
+
+    /** The piece that was captured during this move, if any. */
     final Piece capturedPiece;
+
+    /**
+     * Static counter to track moves until stalemate. 
+     * Resets to 0 when a Pawn or King move occurs.
+     */
     static int movesToStalemate = 0;
+
+    /** Indicates whether the piece has previously moved. */
     boolean haveMoved;
 
+    /**
+     * Constructs a new Move with detailed move information.
+     *
+     * @param fromRow Row index of the starting position
+     * @param fromCol Column index of the starting position
+     * @param toRow Row index of the destination position
+     * @param toCol Column index of the destination position
+     * @param piece The piece being moved
+     * @param capturedPiece The piece that is captured (if any)
+     * @param timer1 First timer value associated with the move
+     * @param timer2 Second timer value associated with the move
+     */
     public Move(int fromRow, int fromCol, int toRow, int toCol, Piece piece, Piece capturedPiece, int timer1, int timer2) {
         this.fromRow = fromRow;
         this.fromCol = fromCol;
@@ -25,6 +61,12 @@ public class Move {
         }
     }
 
+    /**
+     * Generates a string representation of the move.
+     * Handles special cases like castling, en passant, and piece promotion.
+     *
+     * @return A descriptive string of the move
+     */
     @Override
     public String toString() {
         String result = piece.name + "(" + (char) ('A' + fromCol) + (8 - fromRow) + "->" + (char) ('A' + toCol) + (8 - toRow) + ")" ;
@@ -47,7 +89,17 @@ public class Move {
         return result;
     }
 
+    /**
+     * Checks if this move is equal to another move.
+     * Compares start and end positions, piece name, and piece color.
+     *
+     * @param move The move to compare against
+     * @return true if moves are considered equal, false otherwise
+     */
     public boolean equals(Move move) {
-        return this.fromRow == move.fromRow && this.fromCol == move.fromCol && this.toRow == move.toRow && this.toCol == move.toCol && this.piece != null && this.piece.name.equals(move.piece.name) && this.piece.color.equals(move.piece.color);
+        return this.fromRow == move.fromRow && this.fromCol == move.fromCol &&
+                this.toRow == move.toRow && this.toCol == move.toCol &&
+                this.piece != null && this.piece.name.equals(move.piece.name) &&
+                this.piece.color.equals(move.piece.color);
     }
 }
