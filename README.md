@@ -21,7 +21,7 @@ A fully functional chess game built in Java, featuring all the standard rules of
 
 1. **Clone the repository**:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/BeshoyEhab/Chess-Game
    cd Chess-Game
    ```
 
