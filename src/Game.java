@@ -42,7 +42,7 @@ public class Game extends JFrame{
      *
      * @see Player
      */
-    private final Player player2 = new Player();
+    private Player player2 = new Player();
 
     /// Defines the duration of the game timer for each player in minutes.
     /// Default value is 10 minutes.
@@ -102,6 +102,8 @@ public class Game extends JFrame{
      * Initialized with custom board dimensions, color, and timer duration.
      */
     public ChessBoard board = new ChessBoard(new int[]{800, 800}, color, timerDuration);
+
+    private int movesToStalemate = 0;
 
     public Game() {}
 
@@ -217,7 +219,7 @@ public class Game extends JFrame{
      */
     private void initializeNewGame() {
         // Prompt for player details
-//        player2 = new AI_Minimax();
+        player2 = new AI_Minimax();
         player1.setName(JOptionPane.showInputDialog(this, "Player 1 name:"));
         if (player1.getName() == null || player1.getName().trim().isEmpty()) {
             player1.setName("Player 1");
@@ -339,7 +341,9 @@ public class Game extends JFrame{
             // Attempt to move the selected piece
             if (checkValidateMove(selectedRow, selectedCol, row, col)) {
                 movePiece(selectedRow, selectedCol, row, col);
-                System.out.print(moves.size() % 2 == 1 ? (moves.size()+1)/2 + ") " + moves.getLast().toString() : "\t | " + moves.getLast().toString() + "\n");
+                if (boardState[row][col].name.equals("King") || boardState[row][col].name.equals("Pawn"))
+                    movesToStalemate++;
+                System.out.print(moves.size() % 2 == 1 ? (moves.size()+1)/2 + ") " + moves.getLast() : "\t | " + moves.getLast() + "\n");
                 if (selectedPiece.name.equals("Pawn") && (row == 0 || row == 7)) {
                     selectedPiece.promote(boardState, row, col, "Queen");
                     board.removeSquare(row, col);
@@ -360,6 +364,18 @@ public class Game extends JFrame{
                 selectedCol = -1;
             }
         }
+
+        if (currentPlayer instanceof AI_Minimax) {
+            Move move = AI_Minimax.getBestMove(moves, 3, currentPlayer.getColor().equals("White"));
+            if (move != null) {
+                move.piece = boardState[move.fromRow][move.fromCol];
+                move.capturedPiece = boardState[move.toRow][move.toCol];
+                movePiece(move.fromRow, move.fromCol, move.toRow, move.toCol);
+                board.switchTimers(currentPlayer.getColor());
+                currentPlayer = currentPlayer.getColor().equals(player1.getColor()) ? player2 : player1;
+            }
+        }
+
         if (underCheck(boardState, "White")) {
             board.highlightSquare(whiteKingPosition[0], whiteKingPosition[1], Color.RED);
         } else if (underCheck(boardState, "Black")) {
@@ -369,25 +385,6 @@ public class Game extends JFrame{
         board.highlightSquare(row, col, Color.YELLOW);
         board.repaint();
         board.revalidate();
-//
-//        if (currentPlayer instanceof AI_Minimax ai) {
-//            Move move = ai.getBestMove(moves);
-//            if (move != null) {
-//                while (!checkValidateMove(move.fromRow, move.fromCol, move.toRow, move.toCol)) {
-//                    move.piece = boardState[move.fromRow][move.fromCol];
-//                    System.out.println("Illegible move: " + move);
-//                    AI_Minimax.illegibleMoves.add(move);
-//                    move = ai.getBestMove(moves);
-//                }
-//                AI_Minimax.illegibleMoves.clear();
-//                Move.movesToStalemate = 0;
-//                move.capturedPiece = boardState[move.toRow][move.toCol];
-//                movePiece(move.fromRow, move.fromCol, move.toRow, move.toCol);
-//                moves.add(move);
-//                board.switchTimers(currentPlayer.getColor());
-//                currentPlayer = currentPlayer.getColor().equals(player1.getColor()) ? player2 : player1;
-//            }
-//        }
     }
 
     /**
@@ -457,7 +454,7 @@ public class Game extends JFrame{
      */
     public boolean isStalemate() {
         // Stalemate occurs when 50 moves have been made or threefold repetition occurs and the king is not in check.
-        if (!underCheck(boardState, currentPlayer.getColor()) && (Move.movesToStalemate >= 50 || isThreefoldRepetition())) return true;
+        if (!underCheck(boardState, currentPlayer.getColor()) && (movesToStalemate >= 50 || isThreefoldRepetition())) return true;
 
         return playerCantMove();
     }

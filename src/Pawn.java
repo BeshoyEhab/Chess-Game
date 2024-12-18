@@ -39,7 +39,7 @@ class Pawn extends Piece {
     }
 
     public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board, Move move) {
-        return this.canMove(fromRow, fromCol, toRow, toCol, board) || (move.piece != null && move.piece.name.equals("Pawn") && board[toRow][toCol] == null && move.toRow - fromRow == 0
+        return this.canMove(fromRow, fromCol, toRow, toCol, board) || (move != null && move.piece != null && move.piece.name.equals("Pawn") && board[toRow][toCol] == null && move.toRow - fromRow == 0
                 && toCol == move.fromCol && toRow - fromRow == (color.equals("White") ? -1 : 1) && Math.abs(move.fromRow - move.toRow) == 2); //En passant
     }
 

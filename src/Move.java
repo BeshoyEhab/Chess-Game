@@ -27,12 +27,6 @@ public class Move {
     /** Evaluation score for the move. */
     public int eval;
 
-    /**
-     * Static counter to track moves until stalemate. 
-     * Resets to 0 when a Pawn or King move occurs.
-     */
-    static int movesToStalemate = 0;
-
     /** Indicates whether the piece has previously moved. */
     boolean haveMoved;
 
@@ -57,11 +51,6 @@ public class Move {
         this.capturedPiece = capturedPiece;
         this.haveMoved = piece != null && piece.haveMove;
         this.timers = new int[]{timer1, timer2};
-        if (piece != null && (piece.name.equals("Pawn") || piece.name.equals("King"))) {
-            movesToStalemate = 0;
-        } else {
-            movesToStalemate++;
-        }
     }
 
     /**
