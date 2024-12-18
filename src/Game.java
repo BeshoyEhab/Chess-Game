@@ -119,196 +119,197 @@ public class Game extends JFrame{
      * Updates the icons (piece images) on the chessboard based on the current board state.
      */
     private void updateIcons() {
-            for (int i = 0; i < 8; i++) {
-                for (int j = 0; j < 8; j++) {
-                    if (boardState[i][j] != null)
-                        board.addSquare(i, j, boardState[i][j].getIcon());
-                }
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (boardState[i][j] != null)
+                    board.addSquare(i, j, boardState[i][j].getIcon());
             }
         }
+    }
 
     /**
      * Continuously monitors the game for checkmate or stalemate conditions.
      * If either condition is met, displays an appropriate message and provides restart options.
      */
     private void checkForCheckmate() {
-            new Thread(() -> {
-                while (true) {
-                    if (isCheckmate() && (board.whiteTimer.isRunning() || board.blackTimer.isRunning())) {
-                        EventQueue.invokeLater(() -> {
-                            Path path = Paths.get("lastSave.txt");
-                            try {
-                                Files.deleteIfExists(path);
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                            for (int i = 0; i < moves.size(); i++)
-                                moves.removeLast();
-                            board.whiteTimer.stop();
-                            board.blackTimer.stop();
-                            JOptionPane.showMessageDialog(this, (currentPlayer.getColor().equals("White") ? "Black" : "White") + " has won!");
+        new Thread(() -> {
+            while (true) {
+                if (isCheckmate() && (board.whiteTimer.isRunning() || board.blackTimer.isRunning())) {
+                    EventQueue.invokeLater(() -> {
+                        Path path = Paths.get("lastSave.txt");
+                        try {
+                            Files.deleteIfExists(path);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        for (int i = 0; i < moves.size(); i++)
+                            moves.removeLast();
+                        board.whiteTimer.stop();
+                        board.blackTimer.stop();
+                        JOptionPane.showMessageDialog(this, (currentPlayer.getColor().equals("White") ? "Black" : "White") + " has won!");
 
-                            int restartOption = JOptionPane.showConfirmDialog(this, "Do you want to restart the game?", "Restart Game", JOptionPane.YES_NO_OPTION);
-                            boolean restartChoice = restartOption == JOptionPane.YES_OPTION;
+                        int restartOption = JOptionPane.showConfirmDialog(this, "Do you want to restart the game?", "Restart Game", JOptionPane.YES_NO_OPTION);
+                        boolean restartChoice = restartOption == JOptionPane.YES_OPTION;
 
-                            if (restartChoice) {
-                                board.dispose();
-                                resetGame();
-                            } else {
-                                System.exit(0);
-                            }
-                        });
-                        break;
-                    } else if (isStalemate() && (board.whiteTimer.isRunning() || board.blackTimer.isRunning())) {
-                        EventQueue.invokeLater(() -> {
-                            Path path = Paths.get("lastSave.txt");
-                            try {
-                                Files.deleteIfExists(path);
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                            for (int i = 0; i < moves.size(); i++)
-                                moves.removeLast();
-                            board.whiteTimer.stop();
-                            board.blackTimer.stop();
-                            JOptionPane.showMessageDialog(this, "It's stalemate!");
-                            int restartOption = JOptionPane.showConfirmDialog(this, "Do you want to restart the game?", "Restart Game", JOptionPane.YES_NO_OPTION);
-                            boolean restartChoice = restartOption == JOptionPane.YES_OPTION;
+                        if (restartChoice) {
+                            board.dispose();
+                            resetGame();
+                        } else {
+                            System.exit(0);
+                        }
+                    });
+                    break;
+                } else if (isStalemate() && (board.whiteTimer.isRunning() || board.blackTimer.isRunning())) {
+                    EventQueue.invokeLater(() -> {
+                        Path path = Paths.get("lastSave.txt");
+                        try {
+                            Files.deleteIfExists(path);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        for (int i = 0; i < moves.size(); i++)
+                            moves.removeLast();
+                        board.whiteTimer.stop();
+                        board.blackTimer.stop();
+                        JOptionPane.showMessageDialog(this, "It's stalemate!");
+                        int restartOption = JOptionPane.showConfirmDialog(this, "Do you want to restart the game?", "Restart Game", JOptionPane.YES_NO_OPTION);
+                        boolean restartChoice = restartOption == JOptionPane.YES_OPTION;
 
-                            if (restartChoice) {
-                                board.dispose();
-                                resetGame();
-                            } else {
-                                System.exit(0);
-                            }
-                        });
-                    }
-                    try {
-                        //noinspection BusyWait
-                        Thread.sleep(100); // Checkmate check interval
-                    } catch (InterruptedException e) {
-                        //noinspection CallToPrintStackTrace
-                        e.printStackTrace();
-                    }
+                        if (restartChoice) {
+                            board.dispose();
+                            resetGame();
+                        } else {
+                            System.exit(0);
+                        }
+                    });
                 }
-            }).start();
-        }
+                try {
+                    //noinspection BusyWait
+                    Thread.sleep(100); // Checkmate check interval
+                } catch (InterruptedException e) {
+                    //noinspection CallToPrintStackTrace
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
 
     /**
      * Starts the chess game. Checks for any saved games and prompts the user to continue from the last save or begin a new game.
      */
     private void startGame() {
-            Path path = Paths.get("lastSave.txt");
-            if (Files.exists(path)) {
-                int choice = JOptionPane.showConfirmDialog(this, "A saved game was found. Do you want to continue?", "Continue From Last Game", JOptionPane.YES_NO_OPTION);
-                if (choice == JOptionPane.YES_OPTION) {
-                    restoreMovesFromFile();
-                } else {
-                    initializeNewGame();
-                }
+        Path path = Paths.get("lastSave.txt");
+        if (Files.exists(path)) {
+            int choice = JOptionPane.showConfirmDialog(this, "A saved game was found. Do you want to continue?", "Continue From Last Game", JOptionPane.YES_NO_OPTION);
+            if (choice == JOptionPane.YES_OPTION) {
+                restoreMovesFromFile();
             } else {
                 initializeNewGame();
             }
-            initGame();
+        } else {
+            initializeNewGame();
         }
+        initGame();
+    }
 
     /**
      * Initializes a new chess game. Prompts the players for their names, colors, and timer duration.
      */
     private void initializeNewGame() {
-            // Prompt for player details
-            player1.setName(JOptionPane.showInputDialog(this, "Player 1 name:"));
-            if (player1.getName() == null || player1.getName().trim().isEmpty()) {
-                player1.setName("Player 1");
-            }
-
-            player2.setName(JOptionPane.showInputDialog(this, "Player 2 name:"));
-            if (player2.getName() == null || player2.getName().trim().isEmpty()) {
-                player2.setName("Player 2");
-            }
-
-            Object[] options = {"White", "Black"};
-            player1.setColor((String) JOptionPane.showInputDialog(this, player1.getName() + " color:", "Color Selection",
-                    JOptionPane.PLAIN_MESSAGE, null, options, "White"));
-
-            if (player1.getColor() == null) {
-                player1.setColor("White"); // Default to White if no selection
-            }
-
-            player2.setColor(player1.getColor().equals("White") ? "Black" : "White");
-
-            // Prompt for timer duration
-            String timerInput = JOptionPane.showInputDialog(this, "Enter timer duration in minutes (default 10):");
-            try {
-                timerDuration = Integer.parseInt(timerInput);
-                if (timerDuration <= 0 || timerDuration > 60) throw new NumberFormatException();
-            } catch (NumberFormatException e) {
-                timerDuration = 10; // Default timer duration
-            }
-
-            currentPlayer = player1;
+        // Prompt for player details
+//        player2 = new AI_Minimax();
+        player1.setName(JOptionPane.showInputDialog(this, "Player 1 name:"));
+        if (player1.getName() == null || player1.getName().trim().isEmpty()) {
+            player1.setName("Player 1");
         }
+
+        player2.setName(JOptionPane.showInputDialog(this, "Player 2 name:"));
+        if (player2.getName() == null || player2.getName().trim().isEmpty()) {
+            player2.setName("Player 2");
+        }
+
+        Object[] options = {"White", "Black"};
+        player1.setColor((String) JOptionPane.showInputDialog(this, player1.getName() + " color:", "Color Selection",
+                JOptionPane.PLAIN_MESSAGE, null, options, "White"));
+
+        if (player1.getColor() == null) {
+            player1.setColor("White"); // Default to White if no selection
+        }
+
+        player2.setColor(player1.getColor().equals("White") ? "Black" : "White");
+
+        // Prompt for timer duration
+        String timerInput = JOptionPane.showInputDialog(this, "Enter timer duration in minutes (default 10):");
+        try {
+            timerDuration = Integer.parseInt(timerInput);
+            if (timerDuration <= 0 || timerDuration > 60) throw new NumberFormatException();
+        } catch (NumberFormatException e) {
+            timerDuration = 10; // Default timer duration
+        }
+
+        currentPlayer = player1;
+    }
 
     /**
      * Initializes the chessboard and user interface for the game.
      * Sets up event listeners and player information panels.
      */
     private void initGame() {
-            EventQueue.invokeLater(() -> {
-                // Initialize the chessboard
-                board = new ChessBoard(new int[]{800, 800}, color, timerDuration);
-                updateIcons();
-                setCH();
-                board.setVisible(true);
+        EventQueue.invokeLater(() -> {
+            // Initialize the chessboard
+            board = new ChessBoard(new int[]{800, 800}, color, timerDuration);
+            updateIcons();
+            setCH();
+            board.setVisible(true);
 
-                // Add KeyListener for undo functionality
-                board.addKeyListener(new KeyAdapter() {
-                    @Override
-                    public void keyPressed(KeyEvent e) {
-                        if (e.getKeyCode() == KeyEvent.VK_U) {
-                            undo();
-                        }
+            // Add KeyListener for undo functionality
+            board.addKeyListener(new KeyAdapter() {
+                @Override
+                public void keyPressed(KeyEvent e) {
+                    if (e.getKeyCode() == KeyEvent.VK_U) {
+                        undo();
                     }
-                });
-                board.setFocusable(true);
-                board.requestFocusInWindow();
-
-                // Add player name based on color
-                JLabel player1NameLabel = new JLabel(player1.getName(), SwingConstants.CENTER);
-                player1NameLabel.setFont(new Font("Arial", Font.BOLD, 20));
-                JLabel player2NameLabel = new JLabel(player2.getName(), SwingConstants.CENTER);
-                player2NameLabel.setFont(new Font("Arial", Font.BOLD, 20));
-
-                if ("White".equals(player1.getColor())) {
-                    board.rightPanel.add(player2NameLabel, 0);
-                    board.rightPanel.add(player1NameLabel);
-                } else {
-                    board.rightPanel.add(player1NameLabel, 0);
-                    board.rightPanel.add(player2NameLabel);
                 }
-
-                board.switchTimers(currentPlayer.getColor().equals("White") ? "Black" : "White");
-                checkForCheckmate();
             });
-        }
+            board.setFocusable(true);
+            board.requestFocusInWindow();
+
+            // Add player name based on color
+            JLabel player1NameLabel = new JLabel(player1.getName(), SwingConstants.CENTER);
+            player1NameLabel.setFont(new Font("Arial", Font.BOLD, 20));
+            JLabel player2NameLabel = new JLabel(player2.getName(), SwingConstants.CENTER);
+            player2NameLabel.setFont(new Font("Arial", Font.BOLD, 20));
+
+            if ("White".equals(player1.getColor())) {
+                board.rightPanel.add(player2NameLabel, 0);
+                board.rightPanel.add(player1NameLabel);
+            } else {
+                board.rightPanel.add(player1NameLabel, 0);
+                board.rightPanel.add(player2NameLabel);
+            }
+
+            board.switchTimers(currentPlayer.getColor().equals("White") ? "Black" : "White");
+            checkForCheckmate();
+        });
+    }
 
     /**
      * Sets up mouse click listeners for each square on the chessboard to handle piece movements.
      */
     private void setCH() {
-            for (int i = 0; i < 8; i++) {
-                for (int j = 0; j < 8; j++) {
-                    int finalI = i;
-                    int finalJ = j;
-                    board.getSquare(i, j).addMouseListener(new MouseAdapter() {
-                        @Override
-                        public void mouseClicked(MouseEvent e) {
-                            handleClick(finalI, finalJ);
-                        }
-                    });
-                }
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                int finalI = i;
+                int finalJ = j;
+                board.getSquare(i, j).addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        handleClick(finalI, finalJ);
+                    }
+                });
             }
         }
+    }
 
     /**
      * Handles the logic when a chessboard square is clicked.
@@ -318,75 +319,93 @@ public class Game extends JFrame{
      * @param col The column index of the clicked square.
      */
     private void handleClick(int row, int col) {
-            board.clearHighlights();
-            for (int i = 0; i < 8; i++) {
-                for (int j = 0; j < 8; j++) {
-                    board.removeDot(i, j, boardState[i][j]);
+        board.clearHighlights();
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                board.removeDot(i, j, boardState[i][j]);
+            }
+        }
+        if (selectedPiece == null) {
+            // Select a piece
+            selectedPiece = boardState[row][col];
+            if (selectedPiece != null) {
+                selectedRow = row;
+                selectedCol = col;
+                if (currentPlayer.getColor().equals(selectedPiece.color)) {
+                    assistant();
                 }
             }
-            if (selectedPiece == null) {
-                // Select a piece
-                selectedPiece = boardState[row][col];
-                if (selectedPiece != null) {
-                    selectedRow = row;
-                    selectedCol = col;
-                    if (currentPlayer.getColor().equals(selectedPiece.color)) {
-                        assistant();
-                    }
+        } else {
+            // Attempt to move the selected piece
+            if (checkValidateMove(selectedRow, selectedCol, row, col)) {
+                movePiece(selectedRow, selectedCol, row, col);
+                System.out.print(moves.size() % 2 == 1 ? (moves.size()+1)/2 + ") " + moves.getLast().toString() : "\t | " + moves.getLast().toString() + "\n");
+                if (selectedPiece.name.equals("Pawn") && (row == 0 || row == 7)) {
+                    selectedPiece.promote(boardState, row, col, "Queen");
+                    board.removeSquare(row, col);
+                    board.addSquare(row, col, boardState[row][col].getIcon());
+                }
+                board.switchTimers(currentPlayer.getColor());
+                currentPlayer = currentPlayer.getColor().equals(player1.getColor()) ? player2 : player1;
+            }
+            selectedPiece = boardState[row][col];
+            if (selectedPiece != null) {
+                selectedRow = row;
+                selectedCol = col;
+                if (currentPlayer.getColor().equals(selectedPiece.color)) {
+                    assistant();
                 }
             } else {
-                // Attempt to move the selected piece
-                if (checkValidateMove(selectedRow, selectedCol, row, col)) {
-                    movePiece(selectedRow, selectedCol, row, col);
-                    System.out.print(moves.size() % 2 == 1 ? (moves.size()+1)/2 + ") " + moves.getLast().toString() : "\t | " + moves.getLast().toString() + "\n");
-                    if (selectedPiece.name.equals("Pawn") && (row == 0 || row == 7)) {
-                        selectedPiece.promote(boardState, row, col, "Queen");
-                        board.removeSquare(row, col);
-                        board.addSquare(row, col, boardState[row][col].getIcon());
-                    }
-                    board.switchTimers(currentPlayer.getColor());
-                    currentPlayer = currentPlayer.getColor().equals(player1.getColor()) ? player2 : player1;
-                }
-                selectedPiece = boardState[row][col];
-                if (selectedPiece != null) {
-                    selectedRow = row;
-                    selectedCol = col;
-                    if (currentPlayer.getColor().equals(selectedPiece.color)) {
-                        assistant();
-                    }
-                } else {
-                    selectedRow = -1;
-                    selectedCol = -1;
-                }
+                selectedRow = -1;
+                selectedCol = -1;
             }
-            if (underCheck(boardState, "White")) {
-                board.highlightSquare(whiteKingPosition[0], whiteKingPosition[1], Color.RED);
-            } else if (underCheck(boardState, "Black")) {
-                board.highlightSquare(blackKingPosition[0], blackKingPosition[1], Color.RED);
-            }
-
-            board.highlightSquare(row, col, Color.YELLOW);
-            board.repaint();
-            board.revalidate();
         }
+        if (underCheck(boardState, "White")) {
+            board.highlightSquare(whiteKingPosition[0], whiteKingPosition[1], Color.RED);
+        } else if (underCheck(boardState, "Black")) {
+            board.highlightSquare(blackKingPosition[0], blackKingPosition[1], Color.RED);
+        }
+
+        board.highlightSquare(row, col, Color.YELLOW);
+        board.repaint();
+        board.revalidate();
+//
+//        if (currentPlayer instanceof AI_Minimax ai) {
+//            Move move = ai.getBestMove(moves);
+//            if (move != null) {
+//                while (!checkValidateMove(move.fromRow, move.fromCol, move.toRow, move.toCol)) {
+//                    move.piece = boardState[move.fromRow][move.fromCol];
+//                    System.out.println("Illegible move: " + move);
+//                    AI_Minimax.illegibleMoves.add(move);
+//                    move = ai.getBestMove(moves);
+//                }
+//                AI_Minimax.illegibleMoves.clear();
+//                Move.movesToStalemate = 0;
+//                move.capturedPiece = boardState[move.toRow][move.toCol];
+//                movePiece(move.fromRow, move.fromCol, move.toRow, move.toCol);
+//                moves.add(move);
+//                board.switchTimers(currentPlayer.getColor());
+//                currentPlayer = currentPlayer.getColor().equals(player1.getColor()) ? player2 : player1;
+//            }
+//        }
+    }
 
     /**
      * Updates the positions of the white and black kings based on the current board state.
      */
     private void updateKingPosition() {
-            for (int i = 0; i < 8; i++) {
-                for (int j = 0; j < 8; j++) {
-                    if (boardState[i][j] != null && boardState[i][j].name.equals("King")) {
-                        if (boardState[i][j].color.equals("White")) {
-                            whiteKingPosition = new int[]{i, j};
-                        } else {
-                            blackKingPosition = new int[]{i, j};
-                        }
-                        break;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (boardState[i][j] != null && boardState[i][j].name.equals("King")) {
+                    if (boardState[i][j].color.equals("White")) {
+                        whiteKingPosition = new int[]{i, j};
+                    } else {
+                        blackKingPosition = new int[]{i, j};
                     }
                 }
             }
         }
+    }
 
     /**
      * Checks whether the king of the specified color is in check.
@@ -396,17 +415,17 @@ public class Game extends JFrame{
      * @return True if the specified king is in check; false otherwise.
      */
     private boolean underCheck(Piece[][] Pieces, String color) {
-            updateKingPosition();
-            int[] position = color.equals("White") ? whiteKingPosition : blackKingPosition;
-            for (int i = 0; i < 8; i++) {
-                for (int j = 0; j < 8; j++) {
-                    if (Pieces[i][j] != null && !Pieces[i][j].color.equals(Pieces[position[0]][position[1]].color) && Pieces[i][j].canMove(i, j, position[0], position[1], Pieces,(!moves.isEmpty() && moves.getLast() != null) ? moves.getLast() : new Move(position[0], position[1], i, j, Pieces[position[0]][position[1]], null, timerDuration, timerDuration))) {
-                        return true;
-                    }
+        updateKingPosition();
+        int[] position = color.equals("White") ? whiteKingPosition : blackKingPosition;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (Pieces[i][j] != null && !Pieces[i][j].color.equals(Pieces[position[0]][position[1]].color) && Pieces[i][j].canMove(i, j, position[0], position[1], Pieces,(!moves.isEmpty() && moves.getLast() != null) ? moves.getLast() : new Move(position[0], position[1], i, j, Pieces[position[0]][position[1]], null, timerDuration, timerDuration))) {
+                    return true;
                 }
             }
-            return false;
         }
+        return false;
+    }
 
     /**
      * Checks if the same board position has occurred three times, indicating a potential draw by repetition.
@@ -414,10 +433,10 @@ public class Game extends JFrame{
      * @return True if threefold repetition is detected; false otherwise.
      */
     private boolean isThreefoldRepetition() {
-            if (moves.size() < 11) return false;
-            return moves.getLast().equals(moves.get(moves.size() - 5)) && moves.getLast().equals(moves.get(moves.size() - 9))
-                    && moves.get(moves.size() - 2).equals(moves.get(moves.size() - 6)) && moves.get(moves.size() - 2).equals(moves.get(moves.size() - 10));
-        }
+        if (moves.size() < 11) return false;
+        return moves.getLast().equals(moves.get(moves.size() - 5)) && moves.getLast().equals(moves.get(moves.size() - 9))
+                && moves.get(moves.size() - 2).equals(moves.get(moves.size() - 6)) && moves.get(moves.size() - 2).equals(moves.get(moves.size() - 10));
+    }
 
     /**
      * Determines if the game is in a checkmate state, where the current player has no legal moves and their king is in check.
@@ -425,11 +444,11 @@ public class Game extends JFrame{
      * @return True if checkmate is detected; false otherwise.
      */
     public boolean isCheckmate() {
-            // Enhanced checkmate detection
-            if (!underCheck(boardState, currentPlayer.getColor())) return false;
+        // Enhanced checkmate detection
+        if (!underCheck(boardState, currentPlayer.getColor())) return false;
 
-            return playerCantMove();
-        }
+        return playerCantMove();
+    }
 
     /**
      * Determines if the game is in a stalemate state where the current player has no legal moves but is not in check.
@@ -437,12 +456,11 @@ public class Game extends JFrame{
      * @return True if stalemate is detected; false otherwise.
      */
     public boolean isStalemate() {
-            if (Move.movesToStalemate >= 50 || isThreefoldRepetition()) return true;
-            // Stalemate occurs when a player has no legal moves but is not in check
-            if (underCheck(boardState, currentPlayer.getColor())) return false;
+        // Stalemate occurs when 50 moves have been made or threefold repetition occurs and the king is not in check.
+        if (!underCheck(boardState, currentPlayer.getColor()) && (Move.movesToStalemate >= 50 || isThreefoldRepetition())) return true;
 
-            return playerCantMove();
-        }
+        return playerCantMove();
+    }
 
     /**
      * Checks if the current player has any legal moves available.

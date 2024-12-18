@@ -24,11 +24,10 @@ class Pawn extends Piece {
      * @param toRow   the target row for the Pawn.
      * @param toCol   the target column for the Pawn.
      * @param board   the current state of the chessboard represented as a 2D array of Pieces.
-     * @param move    the last move made on the board, used for en passant validation.
      * @return true if the move is valid, false otherwise.
      */
     @Override
-    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board, Move move) {
+    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board) {
         // Basic pawn movement logic
         int direction = color.equals("White") ? -1 : 1;
 
@@ -36,9 +35,12 @@ class Pawn extends Piece {
         return (toCol == fromCol && board[toRow][toCol] == null && toRow - fromRow == direction) // Common move
                 || (toRow - fromRow == direction && Math.abs(toCol - fromCol) == 1 && board[toRow][toCol] != null) // Capturing diagonally
                 || (toRow - fromRow == 2 * direction && fromCol == toCol && !this.haveMove
-                && board[fromRow + direction][toCol] == null && board[fromRow + 2 * direction][toCol] == null) // Special two-step move
-                || (move.piece.name.equals("Pawn") && board[toRow][toCol] == null && move.toRow - fromRow == 0
-                && toCol == move.fromCol && toRow - fromRow == direction && Math.abs(move.fromRow - move.toRow) == 2); // En passant
+                && board[fromRow + direction][toCol] == null && board[fromRow + 2 * direction][toCol] == null); // Special two-step move
+    }
+
+    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board, Move move) {
+        return this.canMove(fromRow, fromCol, toRow, toCol, board) || (move.piece != null && move.piece.name.equals("Pawn") && board[toRow][toCol] == null && move.toRow - fromRow == 0
+                && toCol == move.fromCol && toRow - fromRow == (color.equals("White") ? -1 : 1) && Math.abs(move.fromRow - move.toRow) == 2); //En passant
     }
 
     /**

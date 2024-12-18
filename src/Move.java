@@ -4,25 +4,28 @@
  */
 public class Move {
     /** Row index of the piece's starting position. */
-    public final int fromRow;
+    public int fromRow;
 
     /** Column index of the piece's starting position. */
-    public final int fromCol;
+    public int fromCol;
 
     /** Row index of the piece's destination position. */
-    public final int toRow;
+    public int toRow;
 
     /** Column index of the piece's destination position. */
-    public final int toCol;
+    public int toCol;
 
     /** Array to store timers associated with the move. */
     public int[] timers;
 
     /** The piece being moved. */
-    final Piece piece;
+    Piece piece;
 
     /** The piece that was captured during this move, if any. */
-    final Piece capturedPiece;
+    Piece capturedPiece;
+
+    /** Evaluation score for the move. */
+    public int eval;
 
     /**
      * Static counter to track moves until stalemate. 
@@ -52,9 +55,9 @@ public class Move {
         this.toCol = toCol;
         this.piece = piece;
         this.capturedPiece = capturedPiece;
-        this.haveMoved = piece.haveMove;
+        this.haveMoved = piece != null && piece.haveMove;
         this.timers = new int[]{timer1, timer2};
-        if (piece.name.equals("Pawn") || piece.name.equals("King")) {
+        if (piece != null && (piece.name.equals("Pawn") || piece.name.equals("King"))) {
             movesToStalemate = 0;
         } else {
             movesToStalemate++;
@@ -69,6 +72,7 @@ public class Move {
      */
     @Override
     public String toString() {
+        if (piece == null) return "(" + this.fromRow + "," + this.fromCol + ") -> (" + this.toRow + "," + this.toCol + ")";
         String result = piece.name + "(" + (char) ('A' + fromCol) + (8 - fromRow) + "->" + (char) ('A' + toCol) + (8 - toRow) + ")" ;
         if (piece.name.equals("King")) {
             if (toCol - fromCol == 2) {

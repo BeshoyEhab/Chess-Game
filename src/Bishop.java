@@ -22,11 +22,10 @@ class Bishop extends Piece {
      * @param toRow   the target row for the Bishop.
      * @param toCol   the target column for the Bishop.
      * @param board   the current state of the chessboard represented as a 2D array of Pieces.
-     * @param move    the last move made on the board, though not required for the Bishop's movement.
      * @return true if the move is valid, false otherwise.
      */
     @Override
-    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board, Move move) {
+    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board) {
         // Bishop moves diagonally: |rowDiff| == |colDiff|
         int rowDiff = Math.abs(fromRow - toRow);
         int colDiff = Math.abs(fromCol - toCol);

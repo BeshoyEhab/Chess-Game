@@ -77,9 +77,13 @@ abstract class Piece {
     /// @param toRow The destination row of the move
     /// @param toCol The destination column of the move
     /// @param board The current state of the chessboard
-    /// @param move The move being attempted
     /// @return true if the move is valid, false otherwise
-    public abstract boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board, Move move);
+
+    public abstract boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board);
+
+    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board, Move move) {
+        return this.canMove(fromRow, fromCol, toRow, toCol, board);
+    }
 
     /// Creates and returns the initial setup of a standard chess board.
     /// Positions all pieces in their starting locations for a new chess game:
