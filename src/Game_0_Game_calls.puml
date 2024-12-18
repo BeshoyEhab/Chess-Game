@@ -1,0 +1,81 @@
+@startuml
+!define AGGREGATION "GroupByClass"
+
+title Chess Game (Team 57)
+
+class Game {
+    - player1: Player
+    - player2: Player
+    - board: chessBoard
+    - timeDuration: int
+    - selectedPiece: Piece
+    +main(args: String[])
+
+}
+
+class Piece {
+    +canMove()
+}
+
+class Bishop {
+    -Bishop()
+    +canMove()
+}
+
+class King {
+    -King()
+    +canMove()
+}
+
+class Knight {
+    -Knight()
+    +canMove()
+}
+
+class Pawn {
+    -Pawn()
+    +canMove()
+}
+
+class Queen {
+    -Queen()
+    +canMove()
+}
+
+class Rook {
+    -Rook()
+    +canMove()
+}
+
+class Board {
+    +initializeBoard()
+    +printBoard()
+}
+
+class Player {
+    +makeMove()
+}
+
+class GameController {
+    +startGame()
+    +endGame()
+}
+
+Game --> Piece
+Piece <|-- Bishop
+Piece <|-- King
+Piece <|-- Knight
+Piece <|-- Pawn
+Piece <|-- Queen
+Piece <|-- Rook
+
+Game --> Board
+Board ..> Piece : contains
+
+Game --> Player
+Player ..> Piece : controls
+
+Game --> GameController
+GameController ..> Game : manages
+
+@enduml
