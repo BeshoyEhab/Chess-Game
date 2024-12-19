@@ -1,3 +1,9 @@
+package GameManager;
+
+import AI.*;
+import Pieces.*;
+import Utilities.*;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -8,20 +14,20 @@ import java.util.ArrayList;
 
 /// Represents a complete chess game application with a graphical user interface.
 /// This class manages the entire chess game lifecycle, including:
-/// - Player management and initialization
+/// - Utilities.Player management and initialization
 /// - Board state tracking
-/// - Move validation and execution
-/// - Game state detection (checkmate, stalemate)
+/// - Utilities.Move validation and execution
+/// - GameManager.Game state detection (checkmate, stalemate)
 /// - Timer management
 /// - Saving and restoring game progress
 ///
 /// The game supports features such as:
 /// - Custom player names and colors
 /// - Configurable game timer
-/// - Piece movement and capture
+/// - Pieces.Piece movement and capture
 /// - Special moves (castling, en passant, pawn promotion)
 /// - Undo functionality
-/// - Game state persistence
+/// - GameManager.Game state persistence
 ///
 /// @author Team 57
 /// @version 1.0
@@ -34,7 +40,7 @@ public class Game extends JFrame{
      *
      * @see Player
      */
-    final Player player1 = new Player();
+    public final Player player1 = new Player();
 
     /**
      * Represents the second player in the chess game.
@@ -42,7 +48,7 @@ public class Game extends JFrame{
      *
      * @see Player
      */
-    protected Player player2 = new Player();
+    public Player player2 = new Player();
 
     /// Defines the duration of the game timer for each player in minutes.
     /// Default value is 10 minutes.
@@ -77,25 +83,27 @@ public class Game extends JFrame{
      * Stores a chronological list of all moves made during the game.
      * Each move is represented as a {@link Move} object, allowing game replay and state restoration.
      */
-    protected final ArrayList<Move> moves = new ArrayList<>();
+    public final ArrayList<Move> moves = new ArrayList<>();
 
     /**
      * Represents the current state of the chessboard as a 2D array of chess pieces.
      * Initialized with the standard chess piece setup using {@link Piece#getInitialSetup()}.
      */
-    protected Piece[][] boardState = Piece.getInitialSetup();
+    public Piece[][] boardState = Piece.getInitialSetup();
 
     /**
      * Tracks the current player whose turn it is to make a move.
      * Alternates between {@link #player1} and {@link #player2} during gameplay.
      */
-    protected Player currentPlayer = player1;
+    public Player currentPlayer = player1;
 
     /**
      * Defines the primary color used for one set of chessboard squares in the UI.
      * Defaults to light gray to provide visual contrast.
      */
     private final Color color = Color.LIGHT_GRAY;
+
+    private AIPlayer ai;
 
     /**
      * Manages the graphical user interface for the chessboard and handles user interactions.
@@ -123,8 +131,9 @@ public class Game extends JFrame{
     private void updateIcons() {
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                if (boardState[i][j] != null)
+                if (boardState[i][j] != null) {
                     board.addSquare(i, j, boardState[i][j].getIcon());
+                }
             }
         }
     }
@@ -133,7 +142,7 @@ public class Game extends JFrame{
      * Continuously monitors the game for checkmate or stalemate conditions.
      * If either condition is met, displays an appropriate message and provides restart options.
      */
-    private void checkForCheckmate() {
+    private void isGameOver() {
         new Thread(() -> {
             while (true) {
                 if (isCheckmate() && (board.whiteTimer.isRunning() || board.blackTimer.isRunning())) {
@@ -150,7 +159,7 @@ public class Game extends JFrame{
                         board.blackTimer.stop();
                         JOptionPane.showMessageDialog(this, (currentPlayer.getColor().equals("White") ? "Black" : "White") + " has won!");
 
-                        int restartOption = JOptionPane.showConfirmDialog(this, "Do you want to restart the game?", "Restart Game", JOptionPane.YES_NO_OPTION);
+                        int restartOption = JOptionPane.showConfirmDialog(this, "Do you want to restart the game?", "Restart GameManager.Game", JOptionPane.YES_NO_OPTION);
                         boolean restartChoice = restartOption == JOptionPane.YES_OPTION;
 
                         if (restartChoice) {
@@ -174,7 +183,31 @@ public class Game extends JFrame{
                         board.whiteTimer.stop();
                         board.blackTimer.stop();
                         JOptionPane.showMessageDialog(this, "It's stalemate!");
-                        int restartOption = JOptionPane.showConfirmDialog(this, "Do you want to restart the game?", "Restart Game", JOptionPane.YES_NO_OPTION);
+                        int restartOption = JOptionPane.showConfirmDialog(this, "Do you want to restart the game?", "Restart GameManager.Game", JOptionPane.YES_NO_OPTION);
+                        boolean restartChoice = restartOption == JOptionPane.YES_OPTION;
+
+                        if (restartChoice) {
+                            board.dispose();
+                            resetGame();
+                        } else {
+                            System.exit(0);
+                        }
+                    });
+                } else if (board.whiteTimeRemaining <= 0 || board.blackTimeRemaining <= 0) {
+                    EventQueue.invokeLater(() -> {
+                        ai.cancel(true);
+                        Path path = Paths.get("lastSave.txt");
+                        try {
+                            Files.deleteIfExists(path);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        for (int i = 0; i < moves.size(); i++)
+                            moves.removeLast();
+                        board.whiteTimer.stop();
+                        board.blackTimer.stop();
+                        JOptionPane.showMessageDialog(this, currentPlayer.getColor() + " is out of time.");
+                        int restartOption = JOptionPane.showConfirmDialog(this, "Do you want to restart the game?", "Restart GameManager.Game", JOptionPane.YES_NO_OPTION);
                         boolean restartChoice = restartOption == JOptionPane.YES_OPTION;
 
                         if (restartChoice) {
@@ -202,7 +235,7 @@ public class Game extends JFrame{
     private void startGame() {
         Path path = Paths.get("lastSave.txt");
         if (Files.exists(path)) {
-            int choice = JOptionPane.showConfirmDialog(this, "A saved game was found. Do you want to continue?", "Continue From Last Game", JOptionPane.YES_NO_OPTION);
+            int choice = JOptionPane.showConfirmDialog(this, "A saved game was found. Do you want to continue?", "Continue From Last GameManager.Game", JOptionPane.YES_NO_OPTION);
             if (choice == JOptionPane.YES_OPTION) {
                 restoreMovesFromFile();
             } else {
@@ -219,15 +252,24 @@ public class Game extends JFrame{
      */
     private void initializeNewGame() {
         // Prompt for player details
-        player2 = new AI_Minimax();
+        String[] opts = {"AI", "1vs1"};
+        String playAI = (String) JOptionPane.showInputDialog(this, "What do you want with?", "Play With", JOptionPane.QUESTION_MESSAGE, null, opts, opts[1]);
+        if (playAI == null || playAI.equals("AI")) {
+            playAI = "AI";
+            player2 = new AI_Minimax();
+            player2.setName("AI MiniMax");
+        }
+
         player1.setName(JOptionPane.showInputDialog(this, "Player 1 name:"));
         if (player1.getName() == null || player1.getName().trim().isEmpty()) {
             player1.setName("Player 1");
         }
 
-        player2.setName(JOptionPane.showInputDialog(this, "Player 2 name:"));
-        if (player2.getName() == null || player2.getName().trim().isEmpty()) {
-            player2.setName("Player 2");
+        if (!playAI.equals("AI")) {
+            player2.setName(JOptionPane.showInputDialog(this, "Player 2 name:"));
+            if (player2.getName() == null || player2.getName().trim().isEmpty()) {
+                player2.setName("Player 2");
+            }
         }
 
         Object[] options = {"White", "Black"};
@@ -291,7 +333,7 @@ public class Game extends JFrame{
             }
 
             board.switchTimers(currentPlayer.getColor().equals("White") ? "Black" : "White");
-            checkForCheckmate();
+            isGameOver();
         });
     }
 
@@ -342,15 +384,16 @@ public class Game extends JFrame{
                 // Attempt to move the selected piece
                 if (checkValidateMove(selectedRow, selectedCol, row, col)) {
                     movePiece(selectedRow, selectedCol, row, col);
-                    if (boardState[row][col].name.equals("King") || boardState[row][col].name.equals("Pawn")) {
+                    if (boardState[row][col].name.equals("King")) {
                         movesToStalemate++;
+                    } if (boardState[row][col].name.equals("Pawn")) {
+                        if ((row == 0 && boardState[row][col].color.equals("White")) || (row == 7 && boardState[row][col].color.equals("Black"))) {
+                            showPromotionDialog(row, col);
+                        } else {
+                            movesToStalemate++;
+                        }
                     }
                     System.out.print(moves.size() % 2 == 1 ? (moves.size() + 1) / 2 + ") " + moves.getLast() : "\t | " + moves.getLast() + "\n");
-                    if (selectedPiece.name.equals("Pawn") && (row == 0 || row == 7)) {
-                        selectedPiece.promote(boardState, row, col, "Queen");
-                        board.removeSquare(row, col);
-                        board.addSquare(row, col, boardState[row][col].getIcon());
-                    }
                     board.switchTimers(currentPlayer.getColor());
                     currentPlayer = currentPlayer.getColor().equals(player1.getColor()) ? player2 : player1;
                 }
@@ -369,8 +412,8 @@ public class Game extends JFrame{
         }
         if (currentPlayer instanceof AI_Minimax && !AIPlayer.isThinking()) {
             String aiColor = currentPlayer.getColor();
-            new AIPlayer(currentPlayer.getColor().equals("White"),
-                    this, aiColor).execute();
+            ai = new AIPlayer(currentPlayer.getColor().equals("White"), this, aiColor);
+            ai.execute();
         }
 
         highlightCheck();
@@ -380,7 +423,45 @@ public class Game extends JFrame{
         board.revalidate();
     }
 
-    protected void highlightCheck() {
+    /**
+     * Shows a dialog to the player to choose a piece to promote the pawn to.
+     * @param row Row of the pawn that needs promotion.
+     * @param col Column of the pawn that needs promotion.
+     */
+    private void showPromotionDialog(int row, int col) {
+        Object[] options = {"Queen", "Rook", "Bishop", "Knight"};
+        String selectedOption = (String) JOptionPane.showInputDialog(
+                this,
+                "Choose a piece to promote your pawn to:",
+                "Pawn Promotion",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
+
+        if (selectedOption != null) {
+            switch (selectedOption) {
+                case "Queen":
+                    boardState[row][col] = new Queen(boardState[row][col].color);
+                    break;
+                case "Rook":
+                    boardState[row][col] = new Rook(boardState[row][col].color);
+                    break;
+                case "Bishop":
+                    boardState[row][col] = new Bishop(boardState[row][col].color);
+                    break;
+                case "Knight":
+                    boardState[row][col] = new Knight(boardState[row][col].color);
+                    break;
+            }
+            moves.getLast().promoteTo = selectedOption;
+            board.removeSquare(row, col);
+            board.addSquare(row, col, boardState[row][col].getIcon());
+        }
+    }
+
+    public void highlightCheck() {
         if (underCheck(boardState, "White")) {
             board.highlightSquare(whiteKingPosition[0], whiteKingPosition[1], Color.RED);
         } else if (underCheck(boardState, "Black")) {
@@ -538,13 +619,12 @@ public class Game extends JFrame{
     /**
      * Moves a piece from one square to another, performs castling if applicable,
      * and saves the move history to file.
-     *
-     * @param fromRow The starting row of the piece.
+     *     * @param fromRow The starting row of the piece.
      * @param fromCol The starting column of the piece.
      * @param toRow   The target row for the piece.
      * @param toCol   The target column for the piece.
      */
-    protected void movePiece(int fromRow, int fromCol, int toRow, int toCol) {
+    public void movePiece(int fromRow, int fromCol, int toRow, int toCol) {
         boolean castling = false;
         moves.add(new Move(fromRow, fromCol, toRow, toCol, boardState[fromRow][fromCol], boardState[toRow][toCol], board.whiteTimeRemaining, board.blackTimeRemaining));
 
@@ -640,11 +720,15 @@ public class Game extends JFrame{
 
             board.switchTimers(currentPlayer.getColor());
             currentPlayer = currentPlayer.getColor().equals(player1.getColor()) ? player2 : player1;
-            board.whiteTimeRemaining = moves.isEmpty() ? timerDuration*600 :moves.getLast().timers[0];
-            board.blackTimeRemaining = moves.isEmpty() ? timerDuration*600 :moves.getLast().timers[1];
+            if (currentPlayer instanceof AI_Minimax) {
+                undo();
+            } else {
+                handleClick(move.fromRow, move.fromCol);
+                board.whiteTimeRemaining = moves.isEmpty() ? timerDuration*600 :moves.getLast().timers[0];
+                board.blackTimeRemaining = moves.isEmpty() ? timerDuration*600 :moves.getLast().timers[1];
+                System.out.println("\n<<<");
+            }
             saveMovesToFile();
-            System.out.println("\n<<<");
-            handleClick(move.fromRow, move.fromCol);
         }
         board.repaint();
         board.revalidate();
@@ -667,10 +751,12 @@ public class Game extends JFrame{
                 int toCol = Integer.parseInt(parts[3].trim());
                 int whiteTime = Integer.parseInt(parts[4].trim());
                 int blackTime = Integer.parseInt(parts[5].trim());
+                String promoteTo = parts.length > 6 ? parts[6].trim() : null;
                 Move move = new Move(fromRow, fromCol, toRow, toCol, boardState[fromRow][fromCol], boardState[toRow][toCol], whiteTime, blackTime);
                 moves.add(move);
                 if (boardState[toRow][toCol] != null) {
                     currentPlayer.capturedPieces.add(boardState[toRow][toCol]);
+                    System.out.println("Captured piece: " + boardState[toRow][toCol].name);
                 }
                 currentPlayer = currentPlayer.getColor().equals(player1.getColor()) ? player2 : player1;
                 boardState[toRow][toCol] = boardState[fromRow][fromCol];
@@ -681,7 +767,14 @@ public class Game extends JFrame{
                     if (move.toRow == 7 || move.toRow == 0) {
                         // Create a new Queen of the same color as the pawn
                         String color = boardState[move.toRow][move.toCol].color;
-                        boardState[move.toRow][move.toCol] = new Queen(color);
+                        assert promoteTo != null;
+                        boardState[move.toRow][move.toCol] = switch (promoteTo) {
+                            case "Queen" -> new Queen(color);
+                            case "Rook" -> new Rook(color);
+                            case "Bishop" -> new Bishop(color);
+                            case "Knight" -> new Knight(color);
+                            default -> new Pawn(color);
+                        };
                     }
                     // Handle en passant capture
                     else if (Math.abs(move.toCol-move.fromCol) == 1 && move.capturedPiece == null) {
@@ -697,15 +790,16 @@ public class Game extends JFrame{
                     }
                 }
             }
+            if (!moves.isEmpty()) {
+                Move lastMove = moves.getLast();
+                System.out.println(lastMove.timers[0] + " , " + lastMove.timers[1]);
+                board.whiteTimeRemaining = lastMove.timers[0];
+                board.blackTimeRemaining = lastMove.timers[1];
+                currentPlayer = moves.size() % 2 == 0 ? player1 : player2;
+                updateCapturedPiecesPanel();
+            }
         } catch (Exception ex) {
             ex.printStackTrace();
-        }
-        if (!moves.isEmpty()) {
-            Move lastMove = moves.getLast();
-            board.whiteTimeRemaining = lastMove.timers[0];
-            board.blackTimeRemaining = lastMove.timers[1];
-            currentPlayer = moves.size() % 2 == 0 ? player1 : player2;
-            updateCapturedPiecesPanel();
         }
     }
 
@@ -720,7 +814,7 @@ public class Game extends JFrame{
         }
         for (Move move : moves) {
             try (FileWriter writer = new FileWriter("lastSave.txt", true)) {
-                writer.write( move.fromRow + "," + move.fromCol + "," + move.toRow + "," + move.toCol + "," + move.timers[0] + "," + move.timers[1] + "\n");
+                writer.write( move.fromRow + "," + move.fromCol + "," + move.toRow + "," + move.toCol + "," + move.timers[0] + "," + move.timers[1] + (move.promoteTo == null ? "" : "," + move.promoteTo) + "\n");
             } catch (java.io.IOException ex) {
                 ex.printStackTrace();
             }
@@ -752,6 +846,7 @@ public class Game extends JFrame{
             player1.setColor(parts[1].trim());
             timerDuration = Integer.parseInt(parts[2].trim());
             parts = lines.get(1).split(",");
+            if (parts[0].trim().equals("AI MiniMax")) player2 = new AI_Minimax();
             player2.setName(parts[0].trim());
             player2.setColor(parts[1].trim());
         } catch (Exception ex) {

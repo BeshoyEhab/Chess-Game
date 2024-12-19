@@ -1,3 +1,7 @@
+package Utilities;
+
+import Pieces.Piece;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -172,7 +176,6 @@ public class ChessBoard extends JFrame {
                 updateTimerLabel(whiteTimerLabel, whiteTimeRemaining);
             } else {
                 ((Timer) e.getSource()).stop(); // Stop the timer when time runs out
-                JOptionPane.showMessageDialog(this, "White player is out of time!");
             }
         });
 
@@ -182,7 +185,6 @@ public class ChessBoard extends JFrame {
                 updateTimerLabel(blackTimerLabel, blackTimeRemaining);
             } else {
                 ((Timer) e.getSource()).stop(); // Stop the timer when time runs out
-                JOptionPane.showMessageDialog(this, "Black player is out of time!");
             }
         });
 

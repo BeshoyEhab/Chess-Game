@@ -1,9 +1,11 @@
+package Pieces;
+
 /**
  * Represents a Rook piece in a chess game.
  * The Rook moves any number of squares along a rank (row) or file (column),
  * as long as the path is clear.
  */
-class Rook extends Piece {
+public class Rook extends Piece {
 
     /**
      * Constructs a Rook with the specified color.
@@ -22,7 +24,7 @@ class Rook extends Piece {
      * @param fromCol the starting column of the Rook.
      * @param toRow   the target row for the Rook.
      * @param toCol   the target column for the Rook.
-     * @param board   the current state of the chessboard represented as a 2D array of Pieces.
+     * @param board   the current state of the chessboard represented as a 2D array of 
      * @return true if the move is valid, false otherwise.
      */
     @Override

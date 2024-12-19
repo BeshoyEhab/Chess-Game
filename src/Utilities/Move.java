@@ -1,3 +1,6 @@
+package Utilities;
+
+import Pieces.*;
 /**
  * Represents a chess move with detailed information about the piece's movement.
  * Tracks the source and destination coordinates, piece information, and move-related states.
@@ -19,16 +22,18 @@ public class Move {
     public int[] timers;
 
     /** The piece being moved. */
-    Piece piece;
+    public Piece piece;
 
     /** The piece that was captured during this move, if any. */
-    Piece capturedPiece;
+    public Piece capturedPiece;
 
     /** Evaluation score for the move. */
     public int eval;
 
     /** Indicates whether the piece has previously moved. */
-    boolean haveMoved;
+    public boolean haveMoved;
+
+    public String promoteTo;
 
     /**
      * Constructs a new Move with detailed move information.
@@ -71,7 +76,7 @@ public class Move {
             }
         } else if (piece.name.equals("Pawn")) {
             if (toRow == 0 || toRow == 7) {
-                result += " = Queen";
+                result += " = " + promoteTo;
             } else if (Math.abs(toCol - fromCol) == 1 && capturedPiece == null) {
                 result += " e.p.";
             }

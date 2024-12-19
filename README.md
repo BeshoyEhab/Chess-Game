@@ -1,4 +1,4 @@
-# Chess Game
+# Chess GameManager.Game
 
 A fully functional chess game built in Java, featuring all the standard rules of chess and a graphical user interface (GUI).
 
@@ -6,7 +6,7 @@ A fully functional chess game built in Java, featuring all the standard rules of
 
 - Supports two-player gameplay on the same machine.
 - Implements standard chess rules, including:
-  - Pawn promotion
+  - Pieces.Pawn promotion
   - Castling
   - En passant
   - Check and checkmate detection
@@ -17,28 +17,28 @@ A fully functional chess game built in Java, featuring all the standard rules of
 
 - Java Development Kit (JDK) 8 or higher.
 
-## Setup and Running the Game
+## Setup and Running the GameManager.Game
 
 1. **Clone the repository**:
    ```bash
    git clone <repository-url>
-   cd Chess-Game
+   cd Chess-GameManager.Game
    ```
 
 2. **Compile the source code**:
    ```bash
-   javac -d out/production/Chess-Game src/*.java
+   javac -d out/production/Chess-GameManager.Game src/*.java
    ```
 
 3. **Run the game**:
    ```bash
-   java -cp out/production/Chess-Game Game
+   java -cp out/production/Chess-GameManager.Game GameManager.Game
    ```
 
 ## Directory Structure
 
 ```
-Chess-Game/
+Chess-GameManager.Game/
 ├── src/                # Source code files
 ├── assets/             # Images of chess pieces
 ├── out/                # Compiled Java classes

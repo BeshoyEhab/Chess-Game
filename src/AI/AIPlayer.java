@@ -1,8 +1,14 @@
+package AI;
+
+import Pieces.*;
+import Utilities.*;
+import GameManager.Game;
+
 import javax.swing.SwingWorker;
 import java.awt.*;
 import java.util.ArrayList;
 
-class AIPlayer extends SwingWorker<Move, Void> {
+public class AIPlayer extends SwingWorker<Move, Void> {
     private final ArrayList<Move> moves;
     private final boolean isMaximizingPlayer;
     private final Game game;
@@ -49,6 +55,7 @@ class AIPlayer extends SwingWorker<Move, Void> {
                     Piece[][] boardState = game.boardState;
                     move.piece = boardState[move.fromRow][move.fromCol];
                     move.capturedPiece = boardState[move.toRow][move.toCol];
+                    move.haveMoved = true;
 
                     // Make the move
                     game.movePiece(move.fromRow, move.fromCol, move.toRow, move.toCol);

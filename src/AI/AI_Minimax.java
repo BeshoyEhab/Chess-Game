@@ -1,4 +1,11 @@
+package AI;
+
+import Pieces.*;
+import Utilities.Move;
+import Utilities.Player;
+
 import java.util.ArrayList;
+import java.util.Random;
 
 public class AI_Minimax extends Player {
     // Evaluation constants for piece values
@@ -11,7 +18,7 @@ public class AI_Minimax extends Player {
     // Depth constants
     private static final int MAX_DEPTH = 5;
 
-    // Piece-square tables for positional evaluation
+    // Pieces.Piece-square tables for positional evaluation
     private static final int[][] PAWN_TABLE = {
             { 0,  5,  5, -10, -10,  5,  5,  0},
             { 0, 10, -5,   0,   0, -5, 10,  0},
@@ -59,7 +66,7 @@ public class AI_Minimax extends Player {
 
         // Get valid moves and sort them
         String currentColor = isMaximizingPlayer ? "White" : "Black";
-        ArrayList<Move> validMoves = validMoves(getBoard(moves), currentColor);
+        ArrayList<Move> validMoves = validMoves(getBoard(moves), currentColor, moves.isEmpty() ? null : moves.getLast());
         validMoves.sort((m1, m2) -> Integer.compare(calculateMoveImportance(m2, moves, currentColor), calculateMoveImportance(m1, moves, currentColor)));
 
         // Maximizing player (White)
@@ -68,7 +75,6 @@ public class AI_Minimax extends Player {
             for (Move move : validMoves) {
                 ArrayList<Move> tmpMoves = new ArrayList<>(moves);
                 tmpMoves.add(move);
-                //System.out.println(move);
                 Move result = minimax(tmpMoves, depth - 1, alpha, beta, false);
                 if (result.eval > maxEval) {
                     maxEval = result.eval;
@@ -116,7 +122,7 @@ public class AI_Minimax extends Player {
         }
 
         String currentColor = isMaximizingPlayer ? "White" : "Black";
-        ArrayList<Move> validMoves = validMoves(getBoard(moves), currentColor);
+        ArrayList<Move> validMoves = validMoves(getBoard(moves), currentColor, moves.isEmpty() ? null : moves.getLast());
         for (Move move : validMoves) {
             if (move.capturedPiece == null) continue; // Only consider capture moves
 
@@ -163,7 +169,7 @@ public class AI_Minimax extends Player {
             }
         }
 
-        score += evaluateMobility(board, "White") - evaluateMobility(board, "Black");
+        score += evaluateMobility(board, "White", moves.isEmpty() ? null : moves.getLast()) - evaluateMobility(board, "Black", moves.isEmpty() ? null : moves.getLast());
         return score;
     }
 
@@ -182,9 +188,9 @@ public class AI_Minimax extends Player {
     /**
      * Evaluate piece mobility as a bonus.
      */
-    private static int evaluateMobility(Piece[][] board, String color) {
+    private static int evaluateMobility(Piece[][] board, String color, Move lastMove) {
         int mobilityBonus = 0;
-        ArrayList<Move> valMoves = validMoves(board, color);
+        ArrayList<Move> valMoves = validMoves(board, color, lastMove);
         mobilityBonus += valMoves.size();
         return mobilityBonus;
     }
@@ -235,7 +241,11 @@ public class AI_Minimax extends Player {
      */
     public static Move getBestMove(ArrayList<Move> moves, int baseDepth, boolean isMaximizingPlayer) {
         int adaptiveDepth = Math.min(baseDepth + (moves.size() / 10), MAX_DEPTH);
-        return minimax(moves, adaptiveDepth, Integer.MIN_VALUE, Integer.MAX_VALUE, isMaximizingPlayer);
+        Move move = minimax(moves, adaptiveDepth, Integer.MIN_VALUE, Integer.MAX_VALUE, isMaximizingPlayer);
+        ArrayList<Move> validMoves = validMoves(getBoard(moves), isMaximizingPlayer ? "White" : "Black", moves.isEmpty() ? null : moves.getLast());
+        if (validMoves.isEmpty()) return null;
+        if (move.fromRow == -1) move = validMoves.get(new Random().nextInt(validMoves.size()));
+        return move;
     }
 
     /**
@@ -261,7 +271,7 @@ public class AI_Minimax extends Player {
             // Handle pawn promotion
             if (board[move.toRow][move.toCol].name.equals("Pawn")) {
                 if (move.toRow == 7 || move.toRow == 0) {
-                    // Create a new Queen of the same color as the pawn
+                    // Create a new Pieces.Queen of the same color as the pawn
                     String color = board[move.toRow][move.toCol].color;
                     board[move.toRow][move.toCol] = new Queen(color);
                 }
@@ -287,7 +297,7 @@ public class AI_Minimax extends Player {
     /**
      * Generate all valid moves for a given color.
      */
-    private static ArrayList<Move> validMoves(Piece[][] board, String color) {
+    private static ArrayList<Move> validMoves(Piece[][] board, String color, Move lastMove) {
         ArrayList<Move> moves = new ArrayList<>();
         for (int fromRow = 0; fromRow < 8; fromRow++) {
             for (int fromCol = 0; fromCol < 8; fromCol++) {
@@ -296,7 +306,7 @@ public class AI_Minimax extends Player {
                 }
                 for (int toRow = 0; toRow < 8; toRow++) {
                     for (int toCol = 0; toCol < 8; toCol++) {
-                        if (checkValidateMove(fromRow, fromCol, toRow, toCol, board, color, null)) {
+                        if (checkValidateMove(fromRow, fromCol, toRow, toCol, board, color, lastMove)) {
                             moves.add(new Move(fromRow, fromCol, toRow, toCol, board[fromRow][fromCol], board[toRow][toCol], 0, 0));
                         }
                     }
@@ -352,7 +362,6 @@ public class AI_Minimax extends Player {
             boardState[toRow][toCol] = boardState[fromRow][fromCol];
             boardState[fromRow][fromCol] = null;
             if (!underCheck(boardState, color)) {
-//                System.out.println("Valid move: " + fromRow + ", " + fromCol + " -> " + toRow + ", " + toCol + " it's name is " + boardState[toRow][toCol].name);
                 result = true;
             }
             boardState[fromRow][fromCol] = boardState[toRow][toCol];
@@ -375,7 +384,6 @@ public class AI_Minimax extends Player {
                 }
             }
         }
-        System.out.println("No check found");
         return false;
     }
 

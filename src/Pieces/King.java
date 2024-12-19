@@ -1,3 +1,5 @@
+package Pieces;
+
 /**
  * Represents a King piece in a chess game.
  * The King can move one square in any direction and has the ability to castle under specific conditions.
@@ -21,7 +23,7 @@ class King extends Piece {
      * @param fromCol the starting column of the King.
      * @param toRow   the target row for the King.
      * @param toCol   the target column for the King.
-     * @param board   the current state of the chessboard represented as a 2D array of Pieces.
+     * @param board   the current state of the chessboard represented as a 2D array of 
      * @return true if the move is valid, false otherwise.
      */
     @Override
