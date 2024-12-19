@@ -111,7 +111,7 @@ public class Game extends JFrame{
      */
     public ChessBoard board = new ChessBoard(new int[]{800, 800}, color, timerDuration);
 
-    private int movesToStalemate = 0;
+    public int movesToStalemate = 0;
 
     public Game() {}
 

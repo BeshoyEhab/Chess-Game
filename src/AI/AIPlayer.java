@@ -59,6 +59,16 @@ public class AIPlayer extends SwingWorker<Move, Void> {
 
                     // Make the move
                     game.movePiece(move.fromRow, move.fromCol, move.toRow, move.toCol);
+                    if (move.piece.name.equals("King")) {
+                        game.movesToStalemate++;
+                    } if (move.piece.name.equals("Pawn")) {
+                        if ((move.toRow == 0 && move.piece.color.equals("White")) || (move.toRow == 7 && move.piece.color.equals("Black"))) {
+                            game.boardState[move.toRow][move.toCol] = new Queen(move.piece.color);
+                            game.moves.getLast().promoteTo = "Queen";
+                        } else {
+                            game.movesToStalemate++;
+                        }
+                    }
                     game.board.switchTimers(game.currentPlayer.getColor());
                     game.currentPlayer = aiColor.equals(game.player1.getColor()) ?
                             game.player2 : game.player1;

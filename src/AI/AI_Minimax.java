@@ -218,6 +218,8 @@ public class AI_Minimax extends Player {
             score += 20; // Bonus for check moves
         }
 
+        score += 1000 * (isGameOver(tmpMoves, currentColor.equals("White")) ? -1 : 0);
+
         return score;
     }
 
@@ -253,9 +255,13 @@ public class AI_Minimax extends Player {
      */
     private static boolean isGameOver(ArrayList<Move> moves, boolean isMaximizingPlayer) {
         Piece[][] board = getBoard(moves);
-        String currentColor = isMaximizingPlayer ? "White" : "Black";
-
-        return playerCantMove(board, currentColor, moves) && underCheck(board, currentColor);
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (board[i][j] != null && board[i][j].name.equals("King") && board[i][j].color.equals(isMaximizingPlayer? "White" : "Black"))
+                    return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -317,28 +323,8 @@ public class AI_Minimax extends Player {
     }
 
     /**
-     * Check if the player cannot make any valid moves.
-     */
-    private static boolean playerCantMove(Piece[][] board, String color, ArrayList<Move> moves) {
-        for (int fromRow = 0; fromRow < 8; fromRow++) {
-            for (int fromCol = 0; fromCol < 8; fromCol++) {
-                if (board[fromRow][fromCol] == null || !board[fromRow][fromCol].color.equals(color)) continue;
-                for (int toRow = 0; toRow < 8; toRow++) {
-                    for (int toCol = 0; toCol < 8; toCol++) {
-                        if (checkValidateMove(fromRow, fromCol, toRow, toCol, board, color, moves.isEmpty() ? null : moves.getLast())) {
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
      * Check if a move is valid based on game rules.
      */
-
     private static boolean checkValidateMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] boardState, String color, Move lastMove) {
         boolean result = false;
         Piece selectedPiece = boardState[fromRow][fromCol];
