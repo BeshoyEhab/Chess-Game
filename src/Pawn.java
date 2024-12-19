@@ -54,8 +54,7 @@ class Pawn extends Piece {
      */
     public void promote(Piece[][] board, int row, int col, String promoteTo) {
         if (row == 0 || row == 7) {
-            Piece piece;
-            piece = switch (promoteTo) {
+            Piece piece = switch (promoteTo) {
                 case "Rook" -> new Rook(this.color);
                 case "Bishop" -> new Bishop(this.color);
                 case "Knight" -> new Knight(this.color);

@@ -34,7 +34,7 @@ public class Game extends JFrame{
      *
      * @see Player
      */
-    private final Player player1 = new Player();
+    final Player player1 = new Player();
 
     /**
      * Represents the second player in the chess game.
@@ -42,7 +42,7 @@ public class Game extends JFrame{
      *
      * @see Player
      */
-    private Player player2 = new Player();
+    protected Player player2 = new Player();
 
     /// Defines the duration of the game timer for each player in minutes.
     /// Default value is 10 minutes.
@@ -77,19 +77,19 @@ public class Game extends JFrame{
      * Stores a chronological list of all moves made during the game.
      * Each move is represented as a {@link Move} object, allowing game replay and state restoration.
      */
-    private final ArrayList<Move> moves = new ArrayList<>();
+    protected final ArrayList<Move> moves = new ArrayList<>();
 
     /**
      * Represents the current state of the chessboard as a 2D array of chess pieces.
      * Initialized with the standard chess piece setup using {@link Piece#getInitialSetup()}.
      */
-    private Piece[][] boardState = Piece.getInitialSetup();
+    protected Piece[][] boardState = Piece.getInitialSetup();
 
     /**
      * Tracks the current player whose turn it is to make a move.
      * Alternates between {@link #player1} and {@link #player2} during gameplay.
      */
-    private Player currentPlayer = player1;
+    protected Player currentPlayer = player1;
 
     /**
      * Defines the primary color used for one set of chessboard squares in the UI.
@@ -320,71 +320,73 @@ public class Game extends JFrame{
      * @param row The row index of the clicked square.
      * @param col The column index of the clicked square.
      */
-    private void handleClick(int row, int col) {
+    protected void handleClick(int row, int col) {
         board.clearHighlights();
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                board.removeDot(i, j, boardState[i][j]);
-            }
-        }
-        if (selectedPiece == null) {
-            // Select a piece
-            selectedPiece = boardState[row][col];
-            if (selectedPiece != null) {
-                selectedRow = row;
-                selectedCol = col;
-                if (currentPlayer.getColor().equals(selectedPiece.color)) {
-                    assistant();
+        if (!(currentPlayer instanceof AI_Minimax)) {
+            for (int i = 0; i < 8; i++) {
+                for (int j = 0; j < 8; j++) {
+                    board.removeDot(i, j, boardState[i][j]);
                 }
             }
-        } else {
-            // Attempt to move the selected piece
-            if (checkValidateMove(selectedRow, selectedCol, row, col)) {
-                movePiece(selectedRow, selectedCol, row, col);
-                if (boardState[row][col].name.equals("King") || boardState[row][col].name.equals("Pawn"))
-                    movesToStalemate++;
-                System.out.print(moves.size() % 2 == 1 ? (moves.size()+1)/2 + ") " + moves.getLast() : "\t | " + moves.getLast() + "\n");
-                if (selectedPiece.name.equals("Pawn") && (row == 0 || row == 7)) {
-                    selectedPiece.promote(boardState, row, col, "Queen");
-                    board.removeSquare(row, col);
-                    board.addSquare(row, col, boardState[row][col].getIcon());
-                }
-                board.switchTimers(currentPlayer.getColor());
-                currentPlayer = currentPlayer.getColor().equals(player1.getColor()) ? player2 : player1;
-            }
-            selectedPiece = boardState[row][col];
-            if (selectedPiece != null) {
-                selectedRow = row;
-                selectedCol = col;
-                if (currentPlayer.getColor().equals(selectedPiece.color)) {
-                    assistant();
+            if (selectedPiece == null) {
+                // Select a piece
+                selectedPiece = boardState[row][col];
+                if (selectedPiece != null) {
+                    selectedRow = row;
+                    selectedCol = col;
+                    if (currentPlayer.getColor().equals(selectedPiece.color)) {
+                        assistant();
+                    }
                 }
             } else {
-                selectedRow = -1;
-                selectedCol = -1;
+                // Attempt to move the selected piece
+                if (checkValidateMove(selectedRow, selectedCol, row, col)) {
+                    movePiece(selectedRow, selectedCol, row, col);
+                    if (boardState[row][col].name.equals("King") || boardState[row][col].name.equals("Pawn")) {
+                        movesToStalemate++;
+                    }
+                    System.out.print(moves.size() % 2 == 1 ? (moves.size() + 1) / 2 + ") " + moves.getLast() : "\t | " + moves.getLast() + "\n");
+                    if (selectedPiece.name.equals("Pawn") && (row == 0 || row == 7)) {
+                        selectedPiece.promote(boardState, row, col, "Queen");
+                        board.removeSquare(row, col);
+                        board.addSquare(row, col, boardState[row][col].getIcon());
+                    }
+                    board.switchTimers(currentPlayer.getColor());
+                    currentPlayer = currentPlayer.getColor().equals(player1.getColor()) ? player2 : player1;
+                }
+                selectedPiece = boardState[row][col];
+                if (selectedPiece != null) {
+                    selectedRow = row;
+                    selectedCol = col;
+                    if (currentPlayer.getColor().equals(selectedPiece.color)) {
+                        assistant();
+                    }
+                } else {
+                    selectedRow = -1;
+                    selectedCol = -1;
+                }
             }
         }
-
-        if (currentPlayer instanceof AI_Minimax) {
-            Move move = AI_Minimax.getBestMove(moves, 3, currentPlayer.getColor().equals("White"));
-            if (move != null) {
-                move.piece = boardState[move.fromRow][move.fromCol];
-                move.capturedPiece = boardState[move.toRow][move.toCol];
-                movePiece(move.fromRow, move.fromCol, move.toRow, move.toCol);
-                board.switchTimers(currentPlayer.getColor());
-                currentPlayer = currentPlayer.getColor().equals(player1.getColor()) ? player2 : player1;
-            }
+        if (currentPlayer instanceof AI_Minimax && !AIPlayer.isThinking()) {
+            String aiColor = currentPlayer.getColor();
+            new AIPlayer(currentPlayer.getColor().equals("White"),
+                    this, aiColor).execute();
         }
 
+        highlightCheck();
+
+        board.highlightSquare(row, col, Color.YELLOW);
+        board.repaint();
+        board.revalidate();
+    }
+
+    protected void highlightCheck() {
         if (underCheck(boardState, "White")) {
             board.highlightSquare(whiteKingPosition[0], whiteKingPosition[1], Color.RED);
         } else if (underCheck(boardState, "Black")) {
             board.highlightSquare(blackKingPosition[0], blackKingPosition[1], Color.RED);
         }
 
-        board.highlightSquare(row, col, Color.YELLOW);
-        board.repaint();
-        board.revalidate();
     }
 
     /**
@@ -542,7 +544,7 @@ public class Game extends JFrame{
      * @param toRow   The target row for the piece.
      * @param toCol   The target column for the piece.
      */
-    private void movePiece(int fromRow, int fromCol, int toRow, int toCol) {
+    protected void movePiece(int fromRow, int fromCol, int toRow, int toCol) {
         boolean castling = false;
         moves.add(new Move(fromRow, fromCol, toRow, toCol, boardState[fromRow][fromCol], boardState[toRow][toCol], board.whiteTimeRemaining, board.blackTimeRemaining));
 
@@ -665,13 +667,32 @@ public class Game extends JFrame{
                 int toCol = Integer.parseInt(parts[3].trim());
                 int whiteTime = Integer.parseInt(parts[4].trim());
                 int blackTime = Integer.parseInt(parts[5].trim());
-                moves.add(new Move(fromRow, fromCol, toRow, toCol, boardState[fromRow][fromCol], boardState[toRow][toCol], whiteTime, blackTime));
-                if (boardState[toRow][toCol] != null)
+                Move move = new Move(fromRow, fromCol, toRow, toCol, boardState[fromRow][fromCol], boardState[toRow][toCol], whiteTime, blackTime);
+                moves.add(move);
+                if (boardState[toRow][toCol] != null) {
                     currentPlayer.capturedPieces.add(boardState[toRow][toCol]);
+                }
                 currentPlayer = currentPlayer.getColor().equals(player1.getColor()) ? player2 : player1;
                 boardState[toRow][toCol] = boardState[fromRow][fromCol];
                 boardState[toRow][toCol].haveMove = true;
                 boardState[fromRow][fromCol] = null;
+                if (move.piece.name.equals("Pawn")) {
+                    if (move.toRow == (move.piece.color.equals("White") ? 7 : 0)) {
+                        boardState[move.toRow][move.toCol].promote(boardState, move.toRow, move.toCol, "Queen");
+                    }
+                    else if (Math.abs(move.toCol-move.fromCol) == 1 && boardState[move.toRow][move.toCol] == null) {
+                        currentPlayer.capturedPieces.add(boardState[move.fromRow][move.toCol]);
+                        boardState[move.fromRow][move.toCol] = null;
+                    }
+                } else if (move.piece.name.equals("King")) {
+                    if (move.toCol - move.fromCol == 2) {
+                        boardState[move.fromRow][5] = boardState[move.fromRow][7];
+                        boardState[move.fromRow][7] = null;
+                    } else if (move.toCol - move.fromCol == -2) {
+                        boardState[move.fromRow][3] = boardState[move.fromRow][0];
+                        boardState[move.fromRow][0] = null;
+                    }
+                }
             }
         } catch (Exception ex) {
             ex.printStackTrace();

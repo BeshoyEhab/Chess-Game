@@ -6,7 +6,7 @@ public class AI_Minimax extends Player {
     private static final int KNIGHT_BISHOP_VALUE = 30;
     private static final int ROOK_VALUE = 50;
     private static final int QUEEN_VALUE = 90;
-    private static final int KING_VALUE = 900;
+    private static final int KING_VALUE = 1000;
 
     // Depth constants
     private static final int MAX_DEPTH = 5;
@@ -68,7 +68,7 @@ public class AI_Minimax extends Player {
             for (Move move : validMoves) {
                 ArrayList<Move> tmpMoves = new ArrayList<>(moves);
                 tmpMoves.add(move);
-                System.out.println(move);
+                //System.out.println(move);
                 Move result = minimax(tmpMoves, depth - 1, alpha, beta, false);
                 if (result.eval > maxEval) {
                     maxEval = result.eval;
@@ -201,7 +201,7 @@ public class AI_Minimax extends Player {
 
         String opponentColor = currentColor.equals("White") ? "Black" : "White";
         if (underCheck(newBoard, opponentColor)) {
-            score += 50; // Bonus for check moves
+            score += 20; // Bonus for check moves
         }
 
         return score;
@@ -237,7 +237,7 @@ public class AI_Minimax extends Player {
         Piece[][] board = getBoard(moves);
         String currentColor = isMaximizingPlayer ? "White" : "Black";
 
-        return playerCantMove(board, currentColor, moves) || underCheck(board, currentColor);
+        return playerCantMove(board, currentColor, moves) && underCheck(board, currentColor);
     }
 
     /**
@@ -248,6 +248,21 @@ public class AI_Minimax extends Player {
         for (Move move : moves) {
             board[move.toRow][move.toCol] = board[move.fromRow][move.fromCol];
             board[move.fromRow][move.fromCol] = null;
+            if (move.piece.name.equals("Pawn")) {
+                if (move.toRow == (move.piece.color.equals("White") ? 7 : 0)) {
+                    board[move.toRow][move.toCol].promote(board, move.toRow, move.toCol, "Queen");
+                }
+                else if (Math.abs(move.toCol-move.fromCol) == 1 && board[move.toRow][move.toCol] == null)
+                    board[move.fromRow][move.toCol] = null;
+            } else if (move.piece.name.equals("King")) {
+                if (move.toCol - move.fromCol == 2) {
+                    board[move.fromRow][5] = board[move.fromRow][7];
+                    board[move.fromRow][7] = null;
+                } else if (move.toCol - move.fromCol == -2) {
+                    board[move.fromRow][3] = board[move.fromRow][0];
+                    board[move.fromRow][0] = null;
+                }
+            }
         }
         return board;
     }
@@ -280,6 +295,7 @@ public class AI_Minimax extends Player {
     private static boolean playerCantMove(Piece[][] board, String color, ArrayList<Move> moves) {
         for (int fromRow = 0; fromRow < 8; fromRow++) {
             for (int fromCol = 0; fromCol < 8; fromCol++) {
+                if (board[fromRow][fromCol] == null || !board[fromRow][fromCol].color.equals(color)) continue;
                 for (int toRow = 0; toRow < 8; toRow++) {
                     for (int toCol = 0; toCol < 8; toCol++) {
                         if (checkValidateMove(fromRow, fromCol, toRow, toCol, board, color, moves.isEmpty() ? null : moves.getLast())) {
@@ -295,30 +311,56 @@ public class AI_Minimax extends Player {
     /**
      * Check if a move is valid based on game rules.
      */
-    private static boolean checkValidateMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board, String color, Move lastMove) {
-        Piece selectedPiece = board[fromRow][fromCol];
-        Piece targetPiece = board[toRow][toCol];
-        if (selectedPiece == null || !color.equals(selectedPiece.color)) return false;
-        if (targetPiece != null && targetPiece.color.equals(selectedPiece.color)) return false;
 
-        return selectedPiece.canMove(fromRow, fromCol, toRow, toCol, board, lastMove);
+    private static boolean checkValidateMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] boardState, String color, Move lastMove) {
+        boolean result = false;
+        Piece selectedPiece = boardState[fromRow][fromCol];
+        Piece piece = boardState[toRow][toCol];
+        if (selectedPiece != null && color.equals(selectedPiece.color) &&
+                ((boardState[toRow][toCol] == null) ||
+                        (boardState[toRow][toCol] != null &&
+                        !selectedPiece.color.equals(boardState[toRow][toCol].color))) &&
+                        selectedPiece.canMove(fromRow, fromCol, toRow, toCol, boardState, lastMove == null ? new Move(fromRow, fromCol, toRow, toCol, selectedPiece, null, 0, 0) : lastMove)) {
+
+            if (selectedPiece.name.equals("King") && (Math.abs(toCol - fromCol) == 2)) {
+                int dir = (toCol-fromCol > 0 ? 1 : -1);
+                if (underCheck(boardState, color)) {
+                    return false;
+                }
+                if (!checkValidateMove(fromRow, fromCol, toRow, toCol-dir, boardState, color, null)) {
+                    return false;
+                }
+            }
+
+            boardState[toRow][toCol] = boardState[fromRow][fromCol];
+            boardState[fromRow][fromCol] = null;
+            if (!underCheck(boardState, color)) {
+//                System.out.println("Valid move: " + fromRow + ", " + fromCol + " -> " + toRow + ", " + toCol + " it's name is " + boardState[toRow][toCol].name);
+                result = true;
+            }
+            boardState[fromRow][fromCol] = boardState[toRow][toCol];
+            boardState[toRow][toCol] = piece;
+        }
+        return result;
     }
 
     /**
      * Check if the king of a given color is under check.
      */
-    private static boolean underCheck(Piece[][] board, String color) {
+    static boolean underCheck(Piece[][] board, String color) {
         int[] kingPosition = findKingPosition(board, color);
-        if (kingPosition == null) return false;
+        if (kingPosition == null) return true;
 
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 Piece piece = board[i][j];
-                if (piece != null && !piece.color.equals(color) && piece.canMove(i, j, kingPosition[0], kingPosition[1], board, null)) {
+                if (piece != null && !piece.color.equals(color) && piece.canMove(i, j, kingPosition[0], kingPosition[1], board)) {
+                    System.out.println("Checking: " + i + ", " + j);
                     return true;
                 }
             }
         }
+        System.out.println("No check found");
         return false;
     }
 
