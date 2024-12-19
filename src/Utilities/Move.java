@@ -98,6 +98,7 @@ public class Move {
         return this.fromRow == move.fromRow && this.fromCol == move.fromCol &&
                 this.toRow == move.toRow && this.toCol == move.toCol &&
                 this.piece != null && this.piece.name.equals(move.piece.name) &&
-                this.piece.color.equals(move.piece.color);
+                this.piece.color.equals(move.piece.color) &&
+                this.capturedPiece == null && move.capturedPiece == null;
     }
 }

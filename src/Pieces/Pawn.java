@@ -38,7 +38,7 @@ public class Pawn extends Piece {
         // First move only: Pawn can move two steps
         return (toCol == fromCol && board[toRow][toCol] == null && toRow - fromRow == direction) // Common move
                 || (toRow - fromRow == direction && Math.abs(toCol - fromCol) == 1 && board[toRow][toCol] != null) // Capturing diagonally
-                || (toRow - fromRow == 2 * direction && fromCol == toCol && !this.haveMove
+                || (toRow - fromRow == 2 * direction && fromCol == toCol && (fromRow == 1 || fromRow == 6)
                 && board[fromRow + direction][toCol] == null && board[fromRow + 2 * direction][toCol] == null); // Special two-step move
     }
 

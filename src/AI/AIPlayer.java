@@ -15,11 +15,12 @@ public class AIPlayer extends SwingWorker<Move, Void> {
     private static volatile boolean isProcessing = false;
     private final String aiColor; // Store the AI's color when move calculation started
 
-    public AIPlayer(boolean isMaximizingPlayer, Game game, String aiColor) {
+    public AIPlayer(boolean isMaximizingPlayer, Game game, String aiColor, int time) {
         this.moves = new ArrayList<>(game.moves);
         this.isMaximizingPlayer = isMaximizingPlayer;
         this.game = game;
         this.aiColor = aiColor;
+        AI_Minimax.startTimeout(time* 97L);
         game.board.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
     }
 
@@ -33,12 +34,19 @@ public class AIPlayer extends SwingWorker<Move, Void> {
             return null;
         }
         isProcessing = true;
+        if (isCancelled())
+            return null;
         return AI_Minimax.getBestMove(moves, 3, isMaximizingPlayer);
     }
 
     @Override
     protected void done() {
         try {
+            if (isCancelled()) {
+                // Task was cancelled, handle accordingly
+                game.board.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                return;
+            }
             Move move = get();
             // Only proceed if it's still AI's turn and the colors match
             if (move != null &&
@@ -61,13 +69,16 @@ public class AIPlayer extends SwingWorker<Move, Void> {
                     game.movePiece(move.fromRow, move.fromCol, move.toRow, move.toCol);
                     if (move.piece.name.equals("King")) {
                         game.movesToStalemate++;
-                    } if (move.piece.name.equals("Pawn")) {
+                    } else if (move.piece.name.equals("Pawn")) {
                         if ((move.toRow == 0 && move.piece.color.equals("White")) || (move.toRow == 7 && move.piece.color.equals("Black"))) {
                             game.boardState[move.toRow][move.toCol] = new Queen(move.piece.color);
                             game.moves.getLast().promoteTo = "Queen";
+                            game.movesToStalemate = 0;
                         } else {
                             game.movesToStalemate++;
                         }
+                    } else {
+                        game.movesToStalemate = 0;
                     }
                     game.board.switchTimers(game.currentPlayer.getColor());
                     game.currentPlayer = aiColor.equals(game.player1.getColor()) ?
@@ -82,6 +93,7 @@ public class AIPlayer extends SwingWorker<Move, Void> {
                     game.highlightCheck();
 
                     game.board.highlightSquare(move.toRow, move.toCol, Color.GREEN);
+                    game.board.highlightSquare(move.fromRow, move.fromCol, Color.YELLOW);
                     game.board.repaint();
                     game.board.revalidate();
                     game.board.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));

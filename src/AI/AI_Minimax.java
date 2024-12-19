@@ -6,6 +6,9 @@ import Utilities.Player;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class AI_Minimax extends Player {
     // Evaluation constants for piece values
@@ -14,6 +17,11 @@ public class AI_Minimax extends Player {
     private static final int ROOK_VALUE = 50;
     private static final int QUEEN_VALUE = 90;
     private static final int KING_VALUE = 1000;
+
+    // New constants for checkmate and check evaluation
+    private static final int CHECKMATE_VALUE = 100000;
+    private static final int CHECK_VALUE = 50;
+    private static final int WINNING_POSITION_BONUS = 200;
 
     // Depth constants
     private static final int MAX_DEPTH = 5;
@@ -52,11 +60,29 @@ public class AI_Minimax extends Player {
             {-50, -30, -10,   0,   0, -10, -30, -50},
     };
 
+    private static final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+
+    // Method to start the timeout
+    public static void startTimeout(long timeoutMillis) {
+        executorService.schedule(() -> {
+        }, timeoutMillis, TimeUnit.MILLISECONDS);
+    }
+
+
     /**
-     * Improved minimax algorithm with alpha-beta pruning and quiescence search.
+     * Improved minimax algorithm with better checkmate detection
      */
     private static Move minimax(ArrayList<Move> moves, int depth, int alpha, int beta, boolean isMaximizingPlayer) {
         Move bestMove = new Move(-1, -1, -1, -1, null, null, 0, 0);
+
+        // Check for immediate checkmate first
+        String currentColor = isMaximizingPlayer ? "White" : "Black";
+        String opponentColor = isMaximizingPlayer ? "Black" : "White";
+
+        if (isCheckmate(moves, opponentColor)) {
+            bestMove.eval = isMaximizingPlayer ? CHECKMATE_VALUE : -CHECKMATE_VALUE;
+            return bestMove;
+        }
 
         // Base case: reached maximum depth or game-ending condition
         if (depth == 0 || isGameOver(moves, isMaximizingPlayer)) {
@@ -65,9 +91,9 @@ public class AI_Minimax extends Player {
         }
 
         // Get valid moves and sort them
-        String currentColor = isMaximizingPlayer ? "White" : "Black";
         ArrayList<Move> validMoves = validMoves(getBoard(moves), currentColor, moves.isEmpty() ? null : moves.getLast());
-        validMoves.sort((m1, m2) -> Integer.compare(calculateMoveImportance(m2, moves, currentColor), calculateMoveImportance(m1, moves, currentColor)));
+        validMoves.sort((m1, m2) -> Integer.compare(calculateMoveImportance(m2, moves, currentColor),
+                calculateMoveImportance(m1, moves, currentColor)));
 
         // Maximizing player (White)
         if (isMaximizingPlayer) {
@@ -75,6 +101,14 @@ public class AI_Minimax extends Player {
             for (Move move : validMoves) {
                 ArrayList<Move> tmpMoves = new ArrayList<>(moves);
                 tmpMoves.add(move);
+
+                // Check if this move leads to checkmate
+                if (isCheckmate(tmpMoves, "Black")) {
+                    bestMove = move;
+                    bestMove.eval = CHECKMATE_VALUE;
+                    return bestMove;
+                }
+
                 Move result = minimax(tmpMoves, depth - 1, alpha, beta, false);
                 if (result.eval > maxEval) {
                     maxEval = result.eval;
@@ -92,6 +126,13 @@ public class AI_Minimax extends Player {
             for (Move move : validMoves) {
                 ArrayList<Move> tmpMoves = new ArrayList<>(moves);
                 tmpMoves.add(move);
+
+                // Check if this move leads to checkmate
+                if (isCheckmate(tmpMoves, "White")) {
+                    bestMove = move;
+                    bestMove.eval = -CHECKMATE_VALUE;
+                    return bestMove;
+                }
 
                 Move result = minimax(tmpMoves, depth - 1, alpha, beta, true);
                 if (result.eval < minEval) {
@@ -112,7 +153,7 @@ public class AI_Minimax extends Player {
      * Quiescence search to extend evaluation for tactical moves like captures and checks.
      */
     private static int quiescenceSearch(ArrayList<Move> moves, int alpha, int beta, boolean isMaximizingPlayer) {
-        int standPat = evaluate(moves);
+        int standPat = evaluate(moves, isMaximizingPlayer);
         if (isMaximizingPlayer) {
             if (standPat >= beta) return beta;
             alpha = Math.max(alpha, standPat);
@@ -138,17 +179,33 @@ public class AI_Minimax extends Player {
                 if (beta <= alpha) return alpha;
             }
         }
-
         return isMaximizingPlayer ? alpha : beta;
     }
 
     /**
-     * Improved evaluation function using piece-square tables and mobility.
+     * Improved evaluation function with stronger emphasis on checkmate and winning positions
      */
-    private static int evaluate(ArrayList<Move> moves) {
+    private static int evaluate(ArrayList<Move> moves, Boolean isMaximizingPlayer) {
         Piece[][] board = getBoard(moves);
         int score = 0;
 
+        // Check for checkmate first
+        if (isCheckmate(moves, isMaximizingPlayer ? "Black" : "White")) {
+            return CHECKMATE_VALUE;
+        }
+        if (isCheckmate(moves, isMaximizingPlayer ? "White" : "Black")) {
+            return -CHECKMATE_VALUE;
+        }
+
+        // Check for check position
+        if (underCheck(board, isMaximizingPlayer ? "Black" : "White")) {
+            score += CHECK_VALUE;
+        }
+        if (underCheck(board, isMaximizingPlayer ? "White" : "Black")) {
+            score -= CHECK_VALUE;
+        }
+
+        // Material and position evaluation
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 Piece piece = board[i][j];
@@ -157,19 +214,33 @@ public class AI_Minimax extends Player {
                 int pieceValue = getPieceValue(piece);
                 int positionBonus = getPieceSquareValue(piece, i, j);
 
+                // Add extra bonus for pieces near enemy king
+                int[] enemyKingPos = findKingPosition(board, piece.color.equals("White") ? "Black" : "White");
+                if (enemyKingPos != null) {
+                    int distanceToKing = Math.abs(i - enemyKingPos[0]) + Math.abs(j - enemyKingPos[1]);
+                    int kingProximityBonus = (7 - distanceToKing) * 5; // More bonus for pieces closer to enemy king
+                    positionBonus += kingProximityBonus;
+                }
+
                 if (piece.name.equals("Queen") && !piece.haveMove) {
-                    // Add bonus for queens that came from promotion
                     if ((piece.color.equals("White") && i == 7) ||
                             (piece.color.equals("Black") && i == 0)) {
-                        pieceValue += 10; // Extra bonus for successfully promoting
+                        pieceValue += 20;
                     }
+                }
+
+                // Add winning position bonus for advantageous positions
+                if (isWinningPosition(board, piece.color)) {
+                    positionBonus += WINNING_POSITION_BONUS;
                 }
 
                 score += piece.color.equals("White") ? (pieceValue + positionBonus) : -(pieceValue + positionBonus);
             }
         }
 
-        score += evaluateMobility(board, "White", moves.isEmpty() ? null : moves.getLast()) - evaluateMobility(board, "Black", moves.isEmpty() ? null : moves.getLast());
+        score += evaluateMobility(board, "White", moves.isEmpty() ? null : moves.getLast()) -
+                evaluateMobility(board, "Black", moves.isEmpty() ? null : moves.getLast());
+
         return score;
     }
 
@@ -185,6 +256,28 @@ public class AI_Minimax extends Player {
         };
     }
 
+
+    /**
+     * New method to evaluate if a position is winning
+     */
+    private static boolean isWinningPosition(Piece[][] board, String color) {
+        int materialAdvantage = 0;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                Piece piece = board[i][j];
+                if (piece != null) {
+                    int value = getPieceValue(piece);
+                    if (piece.color.equals(color)) {
+                        materialAdvantage += value;
+                    } else {
+                        materialAdvantage -= value;
+                    }
+                }
+            }
+        }
+        return materialAdvantage > QUEEN_VALUE;
+    }
+
     /**
      * Evaluate piece mobility as a bonus.
      */
@@ -196,29 +289,44 @@ public class AI_Minimax extends Player {
     }
 
     /**
-     * Calculate move importance for move ordering.
-     * Prioritizes captures and moves that put opponent in check.
+     * Improved move importance calculation with stronger emphasis on checks and captures
      */
     private static int calculateMoveImportance(Move move, ArrayList<Move> previousMoves, String currentColor) {
         Piece[][] board = getBoard(previousMoves);
         int score = 0;
 
-        // Capture moves are highly valued
-        if (board[move.toRow][move.toCol] != null) {
-            score += getPieceValue(board[move.toRow][move.toCol]);
-        }
-
-        // Check moves are also prioritized
+        // Immediate checkmate moves get the highest priority
         ArrayList<Move> tmpMoves = new ArrayList<>(previousMoves);
         tmpMoves.add(move);
-        Piece[][] newBoard = getBoard(tmpMoves);
-
-        String opponentColor = currentColor.equals("White") ? "Black" : "White";
-        if (underCheck(newBoard, opponentColor)) {
-            score += 20; // Bonus for check moves
+        if (isCheckmate(tmpMoves, currentColor.equals("White") ? "Black" : "White")) {
+            return Integer.MAX_VALUE;
         }
 
-        score += 1000 * (isGameOver(tmpMoves, currentColor.equals("White")) ? -1 : 0);
+        // Capturing moves
+        if (move.capturedPiece != null) {
+            score += getPieceValue(move.capturedPiece) * 10;
+            // Bonus for capturing with less valuable piece
+            score += (getPieceValue(move.capturedPiece) - getPieceValue(move.piece)) * 5;
+        }
+
+        // Check moves
+        Piece[][] newBoard = getBoard(tmpMoves);
+        String opponentColor = currentColor.equals("White") ? "Black" : "White";
+        if (underCheck(newBoard, opponentColor)) {
+            score += CHECK_VALUE;
+        }
+
+        // Moves that defend king from check
+        if (underCheck(board, currentColor) && !underCheck(newBoard, currentColor)) {
+            score += CHECK_VALUE * 2;
+        }
+
+        // Bonus for moves towards enemy king
+        int[] enemyKingPos = findKingPosition(board, opponentColor);
+        if (enemyKingPos != null) {
+            int distanceToKing = Math.abs(move.toRow - enemyKingPos[0]) + Math.abs(move.toCol - enemyKingPos[1]);
+            score += (7 - distanceToKing) * 10;
+        }
 
         return score;
     }
@@ -242,7 +350,7 @@ public class AI_Minimax extends Player {
      * Public method to get the best move with enhancements.
      */
     public static Move getBestMove(ArrayList<Move> moves, int baseDepth, boolean isMaximizingPlayer) {
-        int adaptiveDepth = Math.min(baseDepth + (moves.size() / 10), MAX_DEPTH);
+        int adaptiveDepth = Math.min(baseDepth , MAX_DEPTH);
         Move move = minimax(moves, adaptiveDepth, Integer.MIN_VALUE, Integer.MAX_VALUE, isMaximizingPlayer);
         ArrayList<Move> validMoves = validMoves(getBoard(moves), isMaximizingPlayer ? "White" : "Black", moves.isEmpty() ? null : moves.getLast());
         if (validMoves.isEmpty()) return null;
@@ -254,14 +362,17 @@ public class AI_Minimax extends Player {
      * Helper to check if the game is over (checkmate or stalemate).
      */
     private static boolean isGameOver(ArrayList<Move> moves, boolean isMaximizingPlayer) {
+        return isCheckmate(moves, isMaximizingPlayer ? "Black" : "White") || isStalemate(moves, isMaximizingPlayer ? "Black" : "White");
+    }
+
+    private static boolean isCheckmate(ArrayList<Move> moves, String color) {
         Piece[][] board = getBoard(moves);
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                if (board[i][j] != null && board[i][j].name.equals("King") && board[i][j].color.equals(isMaximizingPlayer? "White" : "Black"))
-                    return false;
-            }
-        }
-        return true;
+        return underCheck(board, color) && validMoves(board, color, moves.isEmpty() ? null : moves.getLast()).isEmpty();
+    }
+
+    private static boolean isStalemate(ArrayList<Move> moves, String color) {
+        Piece[][] board = getBoard(moves);
+        return !underCheck(board, color) && validMoves(board, color, moves.isEmpty() ? null : moves.getLast()).isEmpty();
     }
 
     /**

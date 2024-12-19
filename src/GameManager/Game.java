@@ -253,7 +253,7 @@ public class Game extends JFrame{
     private void initializeNewGame() {
         // Prompt for player details
         String[] opts = {"AI", "1vs1"};
-        String playAI = (String) JOptionPane.showInputDialog(this, "What do you want with?", "Play With", JOptionPane.QUESTION_MESSAGE, null, opts, opts[1]);
+        String playAI = (String) JOptionPane.showInputDialog(this, "What do you want with?", "Play With", JOptionPane.QUESTION_MESSAGE, null, opts, opts[0]);
         if (playAI == null || playAI.equals("AI")) {
             playAI = "AI";
             player2 = new AI_Minimax();
@@ -281,6 +281,11 @@ public class Game extends JFrame{
         }
 
         player2.setColor(player1.getColor().equals("White") ? "Black" : "White");
+        if (player2.getColor().equals("White")) {
+            String aiColor = currentPlayer.getColor();
+            ai = new AIPlayer(currentPlayer.getColor().equals("White"), this, aiColor, moves.getLast().timers[aiColor.equals("White")?0:1]);
+            ai.execute();
+        }
 
         // Prompt for timer duration
         String timerInput = JOptionPane.showInputDialog(this, "Enter timer duration in minutes (default 10):");
@@ -386,12 +391,15 @@ public class Game extends JFrame{
                     movePiece(selectedRow, selectedCol, row, col);
                     if (boardState[row][col].name.equals("King")) {
                         movesToStalemate++;
-                    } if (boardState[row][col].name.equals("Pawn")) {
+                    } else if (boardState[row][col].name.equals("Pawn")) {
                         if ((row == 0 && boardState[row][col].color.equals("White")) || (row == 7 && boardState[row][col].color.equals("Black"))) {
                             showPromotionDialog(row, col);
+                            movesToStalemate = 0;
                         } else {
                             movesToStalemate++;
                         }
+                    } else {
+                        movesToStalemate = 0;
                     }
                     System.out.print(moves.size() % 2 == 1 ? (moves.size() + 1) / 2 + ") " + moves.getLast() : "\t | " + moves.getLast() + "\n");
                     board.switchTimers(currentPlayer.getColor());
@@ -412,7 +420,7 @@ public class Game extends JFrame{
         }
         if (currentPlayer instanceof AI_Minimax && !AIPlayer.isThinking()) {
             String aiColor = currentPlayer.getColor();
-            ai = new AIPlayer(currentPlayer.getColor().equals("White"), this, aiColor);
+            ai = new AIPlayer(currentPlayer.getColor().equals("White"), this, aiColor,moves.getLast().timers[aiColor.equals("White")?0:1]);
             ai.execute();
         }
 
@@ -513,7 +521,7 @@ public class Game extends JFrame{
      * @return True if threefold repetition is detected; false otherwise.
      */
     private boolean isThreefoldRepetition() {
-        if (moves.size() < 11) return false;
+        if (moves.size() < 12) return false;
         return moves.getLast().equals(moves.get(moves.size() - 5)) && moves.getLast().equals(moves.get(moves.size() - 9))
                 && moves.get(moves.size() - 2).equals(moves.get(moves.size() - 6)) && moves.get(moves.size() - 2).equals(moves.get(moves.size() - 10));
     }
