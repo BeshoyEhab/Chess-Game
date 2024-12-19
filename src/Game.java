@@ -322,12 +322,12 @@ public class Game extends JFrame{
      */
     protected void handleClick(int row, int col) {
         board.clearHighlights();
-        if (!(currentPlayer instanceof AI_Minimax)) {
-            for (int i = 0; i < 8; i++) {
-                for (int j = 0; j < 8; j++) {
-                    board.removeDot(i, j, boardState[i][j]);
-                }
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                board.removeDot(i, j, boardState[i][j]);
             }
+        }
+        if (!(currentPlayer instanceof AI_Minimax)) {
             if (selectedPiece == null) {
                 // Select a piece
                 selectedPiece = boardState[row][col];
@@ -676,12 +676,15 @@ public class Game extends JFrame{
                 boardState[toRow][toCol] = boardState[fromRow][fromCol];
                 boardState[toRow][toCol].haveMove = true;
                 boardState[fromRow][fromCol] = null;
-                if (move.piece.name.equals("Pawn")) {
-                    if (move.toRow == (move.piece.color.equals("White") ? 7 : 0)) {
-                        boardState[move.toRow][move.toCol].promote(boardState, move.toRow, move.toCol, "Queen");
+                // Handle pawn promotion
+                if (boardState[move.toRow][move.toCol].name.equals("Pawn")) {
+                    if (move.toRow == 7 || move.toRow == 0) {
+                        // Create a new Queen of the same color as the pawn
+                        String color = boardState[move.toRow][move.toCol].color;
+                        boardState[move.toRow][move.toCol] = new Queen(color);
                     }
-                    else if (Math.abs(move.toCol-move.fromCol) == 1 && boardState[move.toRow][move.toCol] == null) {
-                        currentPlayer.capturedPieces.add(boardState[move.fromRow][move.toCol]);
+                    // Handle en passant capture
+                    else if (Math.abs(move.toCol-move.fromCol) == 1 && move.capturedPiece == null) {
                         boardState[move.fromRow][move.toCol] = null;
                     }
                 } else if (move.piece.name.equals("King")) {

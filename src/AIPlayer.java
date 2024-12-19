@@ -40,6 +40,12 @@ class AIPlayer extends SwingWorker<Move, Void> {
                     game.currentPlayer.getColor().equals(aiColor)) {
 
                 EventQueue.invokeLater(() -> {
+                    game.board.clearHighlights();
+                    for (int i = 0; i < 8; i++) {
+                        for (int j = 0; j < 8; j++) {
+                            game.board.removeDot(i, j, game.boardState[i][j]);
+                        }
+                    }
                     Piece[][] boardState = game.boardState;
                     move.piece = boardState[move.fromRow][move.fromCol];
                     move.capturedPiece = boardState[move.toRow][move.toCol];

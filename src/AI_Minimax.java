@@ -151,6 +151,14 @@ public class AI_Minimax extends Player {
                 int pieceValue = getPieceValue(piece);
                 int positionBonus = getPieceSquareValue(piece, i, j);
 
+                if (piece.name.equals("Queen") && !piece.haveMove) {
+                    // Add bonus for queens that came from promotion
+                    if ((piece.color.equals("White") && i == 7) ||
+                            (piece.color.equals("Black") && i == 0)) {
+                        pieceValue += 10; // Extra bonus for successfully promoting
+                    }
+                }
+
                 score += piece.color.equals("White") ? (pieceValue + positionBonus) : -(pieceValue + positionBonus);
             }
         }
@@ -176,8 +184,8 @@ public class AI_Minimax extends Player {
      */
     private static int evaluateMobility(Piece[][] board, String color) {
         int mobilityBonus = 0;
-        ArrayList<Move> validMoves = validMoves(board, color);
-        mobilityBonus += validMoves.size();
+        ArrayList<Move> valMoves = validMoves(board, color);
+        mobilityBonus += valMoves.size();
         return mobilityBonus;
     }
 
@@ -246,15 +254,24 @@ public class AI_Minimax extends Player {
     private static Piece[][] getBoard(ArrayList<Move> moves) {
         Piece[][] board = Piece.getInitialSetup();
         for (Move move : moves) {
+            // Handle the basic move
             board[move.toRow][move.toCol] = board[move.fromRow][move.fromCol];
             board[move.fromRow][move.fromCol] = null;
-            if (move.piece.name.equals("Pawn")) {
-                if (move.toRow == (move.piece.color.equals("White") ? 7 : 0)) {
-                    board[move.toRow][move.toCol].promote(board, move.toRow, move.toCol, "Queen");
+
+            // Handle pawn promotion
+            if (board[move.toRow][move.toCol].name.equals("Pawn")) {
+                if (move.toRow == 7 || move.toRow == 0) {
+                    // Create a new Queen of the same color as the pawn
+                    String color = board[move.toRow][move.toCol].color;
+                    board[move.toRow][move.toCol] = new Queen(color);
                 }
-                else if (Math.abs(move.toCol-move.fromCol) == 1 && board[move.toRow][move.toCol] == null)
+                // Handle en passant capture
+                else if (Math.abs(move.toCol-move.fromCol) == 1 && move.capturedPiece == null) {
                     board[move.fromRow][move.toCol] = null;
-            } else if (move.piece.name.equals("King")) {
+                }
+            }
+            // Handle castling
+            else if (move.piece.name.equals("King")) {
                 if (move.toCol - move.fromCol == 2) {
                     board[move.fromRow][5] = board[move.fromRow][7];
                     board[move.fromRow][7] = null;
@@ -350,12 +367,10 @@ public class AI_Minimax extends Player {
     static boolean underCheck(Piece[][] board, String color) {
         int[] kingPosition = findKingPosition(board, color);
         if (kingPosition == null) return true;
-
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 Piece piece = board[i][j];
-                if (piece != null && !piece.color.equals(color) && piece.canMove(i, j, kingPosition[0], kingPosition[1], board)) {
-                    System.out.println("Checking: " + i + ", " + j);
+                if (piece != null && !piece.color.equals(board[kingPosition[0]][kingPosition[1]].color) && piece.canMove(i, j, kingPosition[0], kingPosition[1], board)) {
                     return true;
                 }
             }
