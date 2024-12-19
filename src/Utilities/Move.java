@@ -1,37 +1,39 @@
+package Utilities;
+
+import Pieces.*;
 /**
  * Represents a chess move with detailed information about the piece's movement.
  * Tracks the source and destination coordinates, piece information, and move-related states.
  */
 public class Move {
     /** Row index of the piece's starting position. */
-    public final int fromRow;
+    public int fromRow;
 
     /** Column index of the piece's starting position. */
-    public final int fromCol;
+    public int fromCol;
 
     /** Row index of the piece's destination position. */
-    public final int toRow;
+    public int toRow;
 
     /** Column index of the piece's destination position. */
-    public final int toCol;
+    public int toCol;
 
     /** Array to store timers associated with the move. */
     public int[] timers;
 
     /** The piece being moved. */
-    final Piece piece;
+    public Piece piece;
 
     /** The piece that was captured during this move, if any. */
-    final Piece capturedPiece;
+    public Piece capturedPiece;
 
-    /**
-     * Static counter to track moves until stalemate. 
-     * Resets to 0 when a Pawn or King move occurs.
-     */
-    static int movesToStalemate = 0;
+    /** Evaluation score for the move. */
+    public int eval;
 
     /** Indicates whether the piece has previously moved. */
-    boolean haveMoved;
+    public boolean haveMoved;
+
+    public String promoteTo;
 
     /**
      * Constructs a new Move with detailed move information.
@@ -52,13 +54,8 @@ public class Move {
         this.toCol = toCol;
         this.piece = piece;
         this.capturedPiece = capturedPiece;
-        this.haveMoved = piece.haveMove;
+        this.haveMoved = piece != null && piece.haveMove;
         this.timers = new int[]{timer1, timer2};
-        if (piece.name.equals("Pawn") || piece.name.equals("King")) {
-            movesToStalemate = 0;
-        } else {
-            movesToStalemate++;
-        }
     }
 
     /**
@@ -69,6 +66,7 @@ public class Move {
      */
     @Override
     public String toString() {
+        if (piece == null) return "(" + this.fromRow + "," + this.fromCol + ") -> (" + this.toRow + "," + this.toCol + ")";
         String result = piece.name + "(" + (char) ('A' + fromCol) + (8 - fromRow) + "->" + (char) ('A' + toCol) + (8 - toRow) + ")" ;
         if (piece.name.equals("King")) {
             if (toCol - fromCol == 2) {
@@ -78,7 +76,7 @@ public class Move {
             }
         } else if (piece.name.equals("Pawn")) {
             if (toRow == 0 || toRow == 7) {
-                result += " = Queen";
+                result += " = " + promoteTo;
             } else if (Math.abs(toCol - fromCol) == 1 && capturedPiece == null) {
                 result += " e.p.";
             }

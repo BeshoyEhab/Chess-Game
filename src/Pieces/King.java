@@ -1,3 +1,5 @@
+package Pieces;
+
 /**
  * Represents a King piece in a chess game.
  * The King can move one square in any direction and has the ability to castle under specific conditions.
@@ -21,12 +23,11 @@ class King extends Piece {
      * @param fromCol the starting column of the King.
      * @param toRow   the target row for the King.
      * @param toCol   the target column for the King.
-     * @param board   the current state of the chessboard represented as a 2D array of Pieces.
-     * @param move    the last move made on the board, though not required for the King's movement.
+     * @param board   the current state of the chessboard represented as a 2D array of 
      * @return true if the move is valid, false otherwise.
      */
     @Override
-    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board, Move move) {
+    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board) {
         // King moves one square in any direction
         int rowDiff = Math.abs(fromRow - toRow);
         int colDiff = fromCol - toCol;

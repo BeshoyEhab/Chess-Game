@@ -1,3 +1,7 @@
+package Utilities;
+
+import Pieces.Piece;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -127,10 +131,17 @@ public class ChessBoard extends JFrame {
         }
 
         JPanel board = new JPanel();
+        JPanel space = new JPanel();
+        JPanel downIndexes = new JPanel();
         board.setLayout(new BorderLayout());
+        downIndexes.setLayout(new BoxLayout(downIndexes, BoxLayout.X_AXIS));
         board.setPreferredSize(new Dimension(dims[0], dims[1]));
         rowLabels.setPreferredSize(new Dimension(dims[0]/40, dims[1]));
         colLabels.setPreferredSize(new Dimension(dims[0], dims[1]/40));
+        space.setPreferredSize(new Dimension(dims[0]/40, dims[1]/40));
+
+        downIndexes.add(space);
+        downIndexes.add(colLabels);
 
         blackTimerLabel.setFont(new Font("Arial", Font.BOLD, 10));
         whiteTimerLabel.setFont(new Font("Arial", Font.BOLD, 20));
@@ -142,9 +153,9 @@ public class ChessBoard extends JFrame {
 
         // Initialize timers
         initTimers();
-        board.add(rowLabels, BorderLayout.WEST);
-        board.add(colLabels, BorderLayout.SOUTH);
         board.add(boardPanel, BorderLayout.CENTER);
+        board.add(rowLabels, BorderLayout.WEST);
+        board.add(downIndexes, BorderLayout.SOUTH);
         add(board, BorderLayout.CENTER);
         add(rightPanel, BorderLayout.EAST);
 
@@ -165,7 +176,6 @@ public class ChessBoard extends JFrame {
                 updateTimerLabel(whiteTimerLabel, whiteTimeRemaining);
             } else {
                 ((Timer) e.getSource()).stop(); // Stop the timer when time runs out
-                JOptionPane.showMessageDialog(this, "White player is out of time!");
             }
         });
 
@@ -175,7 +185,6 @@ public class ChessBoard extends JFrame {
                 updateTimerLabel(blackTimerLabel, blackTimeRemaining);
             } else {
                 ((Timer) e.getSource()).stop(); // Stop the timer when time runs out
-                JOptionPane.showMessageDialog(this, "Black player is out of time!");
             }
         });
 

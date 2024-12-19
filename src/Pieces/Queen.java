@@ -1,10 +1,12 @@
+package Pieces;
+
 /**
  * Represents a Queen piece in a chess game.
  * The Queen combines the movements of both the Rook and the Bishop,
  * allowing it to move any number of squares either in a straight line or diagonally,
  * as long as the path is clear.
  */
-class Queen extends Piece {
+public class Queen extends Piece {
 
     /**
      * Constructs a Queen with the specified color.
@@ -23,12 +25,11 @@ class Queen extends Piece {
      * @param fromCol the starting column of the Queen.
      * @param toRow   the target row for the Queen.
      * @param toCol   the target column for the Queen.
-     * @param board   the current state of the chessboard represented as a 2D array of Pieces.
-     * @param move    the last move made on the board, though not required for the Queen's movement.
+     * @param board   the current state of the chessboard represented as a 2D array of 
      * @return true if the move is valid, false otherwise.
      */
     @Override
-    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board, Move move) {
+    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board) {
         // Queen combines Rook and Bishop moves
         int rowDiff = Math.abs(fromRow - toRow);
         int colDiff = Math.abs(fromCol - toCol);

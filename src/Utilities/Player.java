@@ -1,3 +1,7 @@
+package Utilities;
+
+import Pieces.Piece;
+
 import java.util.ArrayList;
 
 /**

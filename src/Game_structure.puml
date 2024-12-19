@@ -1,0 +1,200 @@
+@startuml
+
+digraph g {
+    rankdir="TB"
+    splines=polyline
+    
+
+'nodes 
+subgraph cluster_1302572058 { 
+   	label=ChessBoard
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   ChessBoard1302572058[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)ChessBoard</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+   blackCapturedPanel: JPanel [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >+   blackTimeRemaining: int [1]</TD></TR>
+<TR><TD ALIGN="LEFT" >+   blackTimer: Timer [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   blackTimerLabel: JLabel [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   color: Color [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   dims: int[] [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >+   rightPanel: JPanel [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   squares: JPanel[][] [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >+   whiteCapturedPanel: JPanel [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >+   whiteTimeRemaining: int [1]</TD></TR>
+<TR><TD ALIGN="LEFT" >+   whiteTimer: Timer [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   whiteTimerLabel: JLabel [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ addDot(row: int, col: int, color: Color)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ addSquare(row: int, col: int, icon: ImageIcon)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ clearHighlights()</TD></TR>
+<TR><TD ALIGN="LEFT" >+ getSquare(i: int, j: int): JPanel</TD></TR>
+<TR><TD ALIGN="LEFT" >+ highlightSquare(row: int, col: int, color: Color)</TD></TR>
+<TR><TD ALIGN="LEFT" >- initTimers()</TD></TR>
+<TR><TD ALIGN="LEFT" >+ moveSquare(fromRow: int, fromCol: int, toRow: int, toCol: int, icon: ImageIcon)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ removeDot(row: int, col: int, piece: Piece)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ removeSquare(row: int, col: int)</TD></TR>
+<TR><TD ALIGN="LEFT" >- setSquare(i: int, j: int): JPanel</TD></TR>
+<TR><TD ALIGN="LEFT" >+ switchTimers(color: String)</TD></TR>
+<TR><TD ALIGN="LEFT" >- updateTimerLabel(label: JLabel, timeInSeconds: int)</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+} 
+
+subgraph cluster_1901885695 { 
+   	label=Player
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   Player1901885695[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)Player</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+   capturedPieces: ArrayList&lt;Piece&gt; [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   color: String [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   name: String [0..1]</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+} 
+
+subgraph cluster_2211858 { 
+   	label=Game
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   Game2211858[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)Game</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   blackKingPosition: int[] [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >+   board: ChessBoard [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   boardState: Piece[][] [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   color: Color [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   currentPlayer: Player [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   moves: ArrayList&lt;Move&gt; [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   player1: Player [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   player2: Player [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   selectedCol: int [1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   selectedPiece: Piece [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   selectedRow: int [1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   timerDuration: int [1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   whiteKingPosition: int[] [0..*]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >- assistant()</TD></TR>
+<TR><TD ALIGN="LEFT" >- calculateMidColor(color2: Color): Color</TD></TR>
+<TR><TD ALIGN="LEFT" >- checkForCheckmate()</TD></TR>
+<TR><TD ALIGN="LEFT" >- checkValidateMove(fromRow: int, fromCol: int, toRow: int, toCol: int): boolean</TD></TR>
+<TR><TD ALIGN="LEFT" >- handleClick(row: int, col: int)</TD></TR>
+<TR><TD ALIGN="LEFT" >- initGame()</TD></TR>
+<TR><TD ALIGN="LEFT" >- initializeNewGame()</TD></TR>
+<TR><TD ALIGN="LEFT" >+ main(args: String[])</TD></TR>
+<TR><TD ALIGN="LEFT" >- movePiece(fromRow: int, fromCol: int, toRow: int, toCol: int)</TD></TR>
+<TR><TD ALIGN="LEFT" >- playerCantMove(): boolean</TD></TR>
+<TR><TD ALIGN="LEFT" >- readPlayers()</TD></TR>
+<TR><TD ALIGN="LEFT" >- resetGame()</TD></TR>
+<TR><TD ALIGN="LEFT" >- restoreMovesFromFile()</TD></TR>
+<TR><TD ALIGN="LEFT" >- saveMovesToFile()</TD></TR>
+<TR><TD ALIGN="LEFT" >- savePlayers()</TD></TR>
+<TR><TD ALIGN="LEFT" >- startGame()</TD></TR>
+<TR><TD ALIGN="LEFT" >- underCheck(Pieces: Piece[][], color: String): boolean</TD></TR>
+<TR><TD ALIGN="LEFT" >- undo()</TD></TR>
+<TR><TD ALIGN="LEFT" >- updateCapturedPiecesPanel()</TD></TR>
+<TR><TD ALIGN="LEFT" >- updateIcons()</TD></TR>
+<TR><TD ALIGN="LEFT" >- updateKingPosition()</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+} 
+
+subgraph cluster_2404337 { 
+   	label=Move
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   Move2404337[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)Move</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >#   capturedPiece: Piece [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >+   fromCol: int [1]</TD></TR>
+<TR><TD ALIGN="LEFT" >+   fromRow: int [1]</TD></TR>
+<TR><TD ALIGN="LEFT" >#   haveMoved: boolean [1]</TD></TR>
+<TR><TD ALIGN="LEFT" >#   piece: Piece [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >+   timers: int[] [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >+   toCol: int [1]</TD></TR>
+<TR><TD ALIGN="LEFT" >+   toRow: int [1]</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+} 
+
+subgraph cluster_77109966 { 
+   	label=Piece
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   Piece77109966[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)Piece</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >#   color: String [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >#   haveMove: boolean [1]</TD></TR>
+<TR><TD ALIGN="LEFT" >#   icon: ImageIcon [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >#   name: String [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ canMove(fromRow: int, fromCol: int, toRow: int, toCol: int, board: Piece[][], move: Move): boolean</TD></TR>
+<TR><TD ALIGN="LEFT" >+ promote(board: Piece[][], row: int, col: int, promoteTo: String)</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+} 
+
+'edges    
+Game2211858 -> ChessBoard1302572058[label="board
+[0..1]"];
+Game2211858 -> Move2404337[label="moves
+[0..*]"];
+Game2211858 -> Piece77109966[label="boardState
+[0..*]"];
+Game2211858 -> Piece77109966[label="selectedPiece
+[0..1]"];
+Game2211858 -> Player1901885695[label="currentPlayer
+[0..1]"];
+Game2211858 -> Player1901885695[label="player1
+[0..1]"];
+Game2211858 -> Player1901885695[label="player2
+[0..1]"];
+Move2404337 -> Piece77109966[label="capturedPiece
+[0..1]"];
+Move2404337 -> Piece77109966[label="piece
+[0..1]"];
+Player1901885695 -> Piece77109966[label="capturedPieces
+[0..*]"];
+    
+}
+@enduml

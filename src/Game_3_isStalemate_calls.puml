@@ -1,0 +1,301 @@
+@startuml
+
+/' diagram meta data start
+config=CallConfiguration;
+{
+  "rootMethod": "Game#isStalemate()",
+  "projectClassification": {
+    "searchMode": "OpenProject", // OpenProject, AllProjects
+    "includedProjects": "",
+    "pathEndKeywords": "*.impl",
+    "isClientPath": "",
+    "isClientName": "",
+    "isTestPath": "",
+    "isTestName": "",
+    "isMappingPath": "",
+    "isMappingName": "",
+    "isDataAccessPath": "",
+    "isDataAccessName": "",
+    "isDataStructurePath": "",
+    "isDataStructureName": "",
+    "isInterfaceStructuresPath": "",
+    "isInterfaceStructuresName": "",
+    "isEntryPointPath": "",
+    "isEntryPointName": "",
+    "treatFinalFieldsAsMandatory": false
+  },
+  "graphRestriction": {
+    "classPackageExcludeFilter": "",
+    "classPackageIncludeFilter": "",
+    "classNameExcludeFilter": "",
+    "classNameIncludeFilter": "",
+    "methodNameExcludeFilter": "",
+    "methodNameIncludeFilter": "",
+    "removeByInheritance": "", // inheritance/annotation based filtering is done in a second step
+    "removeByAnnotation": "",
+    "removeByClassPackage": "", // cleanup the graph after inheritance/annotation based filtering is done
+    "removeByClassName": "",
+    "cutMappings": false,
+    "cutEnum": true,
+    "cutTests": true,
+    "cutClient": true,
+    "cutDataAccess": false,
+    "cutInterfaceStructures": false,
+    "cutDataStructures": false,
+    "cutGetterAndSetter": true,
+    "cutConstructors": true
+  },
+  "graphTraversal": {
+    "forwardDepth": 3,
+    "backwardDepth": 3,
+    "classPackageExcludeFilter": "",
+    "classPackageIncludeFilter": "",
+    "classNameExcludeFilter": "",
+    "classNameIncludeFilter": "",
+    "methodNameExcludeFilter": "",
+    "methodNameIncludeFilter": "",
+    "hideMappings": false,
+    "hideDataStructures": false,
+    "hidePrivateMethods": true,
+    "hideInterfaceCalls": true, // indirection: implementation -> interface (is hidden) -> implementation
+    "onlyShowApplicationEntryPoints": false, // root node is included
+    "useMethodCallsForStructureDiagram": "ForwardOnly" // ForwardOnly, BothDirections, No
+  },
+  "details": {
+    "aggregation": "GroupByClass", // ByClass, GroupByClass, None
+    "showMethodParametersTypes": false,
+    "showMethodParametersNames": false,
+    "showMethodReturnType": false,
+    "showPackageLevels": 2,
+    "showCallOrder": false,
+    "edgeMode": "MethodsOnly", // TypesOnly, MethodsOnly, TypesAndMethods, MethodsAndDirectTypeUsage
+    "showDetailedClassStructure": false
+  },
+  "rootClass": "Game",
+  "extensionCallbackMethod": "" // qualified.class.name#methodName - signature: public static String method(String)
+}
+diagram meta data end '/
+
+
+
+digraph g {
+    rankdir="LR"
+    splines=polyline
+    
+
+'nodes 
+subgraph cluster_1990023133 { 
+   	label=Bishop
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   subgraph cluster_2053276430 { 
+   	label=Bishop
+	labeljust=l
+	fillcolor=white
+	style=filled
+   
+   Bishop1990023133XXXcanMove1163750345[
+	label="+ canMove()"
+	style=filled
+	fillcolor=white
+	tooltip="Bishop
+
+&#10;  Determines if the Bishop can move from its current position to a target position&#10;  on the chessboard according to chess rules.&#10; &#10;  @param fromRow the starting row of the Bishop.&#10;  @param fromCol the starting column of the Bishop.&#10;  @param toRow the target row for the Bishop.&#10;  @param toCol the target column for the Bishop.&#10;  @param board the current state of the chessboard represented as a 2D array of Pieces.&#10;  @param movethe last move made on the board, though not required for the Bishop's movement.&#10;  @return true if the move is valid, false otherwise.&#10; "
+	fontcolor=darkgreen
+];
+} 
+} 
+
+subgraph cluster_2042963283 { 
+   	label=Knight
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   subgraph cluster_545212146 { 
+   	label=Knight
+	labeljust=l
+	fillcolor=white
+	style=filled
+   
+   Knight2042963283XXXcanMove1163750345[
+	label="+ canMove()"
+	style=filled
+	fillcolor=white
+	tooltip="Knight
+
+&#10;  Determines if the Knight can move from its current position to a target position&#10;  on the chessboard according to chess rules.&#10; &#10;  @param fromRow the starting row of the Knight.&#10;  @param fromCol the starting column of the Knight.&#10;  @param toRow the target row for the Knight.&#10;  @param toCol the target column for the Knight.&#10;  @param board the current state of the chessboard represented as a 2D array of Pieces.&#10;  @param movethe last move made on the board, though not required for the Knight's movement.&#10;  @return true if the move is valid, false otherwise.&#10; "
+	fontcolor=darkgreen
+];
+} 
+} 
+
+subgraph cluster_2211858 { 
+   	label=Game
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   subgraph cluster_1336445842 { 
+   	label=Game
+	labeljust=l
+	fillcolor=white
+	style=filled
+   
+   Game2211858XXXisStalemate0[
+	label="+ isStalemate()"
+	style=filled
+	fillcolor=white
+	tooltip="Game
+
+&#10;  Determines if the game is in a stalemate state where the current player has no legal moves but is not in check.&#10; &#10;  @return True if stalemate is detected; false otherwise.&#10; "
+	penwidth=4
+	fontcolor=darkgreen
+];
+
+Game2211858XXXmain1859653459[
+	label="+ main()"
+	style=filled
+	fillcolor=white
+	tooltip="Game
+
+&#10;  Main entry point for the chess game application.&#10;  Launches a new game instance.&#10; &#10;  @param args Command-line arguments (not used in this application)&#10; "
+	fontcolor=darkgreen
+];
+} 
+} 
+
+subgraph cluster_2338743 { 
+   	label=King
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   subgraph cluster_2026140558 { 
+   	label=King
+	labeljust=l
+	fillcolor=white
+	style=filled
+   
+   King2338743XXXcanMove1163750345[
+	label="+ canMove()"
+	style=filled
+	fillcolor=white
+	tooltip="King
+
+&#10;  Determines if the King can move from its current position to a target position&#10;  on the chessboard according to chess rules, including castling.&#10; &#10;  @param fromRow the starting row of the King.&#10;  @param fromCol the starting column of the King.&#10;  @param toRow the target row for the King.&#10;  @param toCol the target column for the King.&#10;  @param board the current state of the chessboard represented as a 2D array of Pieces.&#10;  @param movethe last move made on the board, though not required for the King's movement.&#10;  @return true if the move is valid, false otherwise.&#10; "
+	fontcolor=darkgreen
+];
+} 
+} 
+
+subgraph cluster_2480296 { 
+   	label=Pawn
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   subgraph cluster_119366190 { 
+   	label=Pawn
+	labeljust=l
+	fillcolor=white
+	style=filled
+   
+   Pawn2480296XXXcanMove1163750345[
+	label="+ canMove()"
+	style=filled
+	fillcolor=white
+	tooltip="Pawn
+
+&#10;  Determines if the Pawn can move from its current position to a target position&#10;  on the chessboard according to chess rules.&#10; &#10;  @param fromRow the starting row of the Pawn.&#10;  @param fromCol the starting column of the Pawn.&#10;  @param toRow the target row for the Pawn.&#10;  @param toCol the target column for the Pawn.&#10;  @param board the current state of the chessboard represented as a 2D array of Pieces.&#10;  @param movethe last move made on the board, used for en passant validation.&#10;  @return true if the move is valid, false otherwise.&#10; "
+	fontcolor=darkgreen
+];
+} 
+} 
+
+subgraph cluster_2553081 { 
+   	label=Rook
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   subgraph cluster_833055950 { 
+   	label=Rook
+	labeljust=l
+	fillcolor=white
+	style=filled
+   
+   Rook2553081XXXcanMove1163750345[
+	label="+ canMove()"
+	style=filled
+	fillcolor=white
+	tooltip="Rook
+
+&#10;  Determines if the Rook can move from its current position to a target position&#10;  on the chessboard according to chess rules.&#10; &#10;  @param fromRow the starting row of the Rook.&#10;  @param fromCol the starting column of the Rook.&#10;  @param toRow the target row for the Rook.&#10;  @param toCol the target column for the Rook.&#10;  @param board the current state of the chessboard represented as a 2D array of Pieces.&#10;  @param movethe last move made on the board, though not required for the Rook's movement.&#10;  @return true if the move is valid, false otherwise.&#10; "
+	fontcolor=darkgreen
+];
+} 
+} 
+
+subgraph cluster_77109966 { 
+   	label=Piece
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   subgraph cluster_1768403026 { 
+   	label=Piece
+	labeljust=l
+	fillcolor=white
+	style=filled
+   
+   Piece77109966XXXcanMove1163750345[
+	label="+ canMove()"
+	style=filled
+	fillcolor=white
+	tooltip="Piece
+
+/// Abstract method to validate if a piece can move from one position to another.&#10;/// Each specific piece type (Pawn, Rook, Knight, etc.) must implement its own&#10;/// movement rules by overriding this method.&#10;///&#10;/// @param fromRow The starting row of the move&#10;/// @param fromCol The starting column of the move&#10;/// @param toRow The destination row of the move&#10;/// @param toCol The destination column of the move&#10;/// @param board The current state of the chessboard&#10;/// @param move The move being attempted&#10;/// @return true if the move is valid, false otherwise"
+	fontcolor=darkgreen
+];
+} 
+} 
+
+subgraph cluster_78391050 { 
+   	label=Queen
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   subgraph cluster_1255951142 { 
+   	label=Queen
+	labeljust=l
+	fillcolor=white
+	style=filled
+   
+   Queen78391050XXXcanMove1163750345[
+	label="+ canMove()"
+	style=filled
+	fillcolor=white
+	tooltip="Queen
+
+&#10;  Determines if the Queen can move from its current position to a target position&#10;  on the chessboard according to chess rules.&#10; &#10;  @param fromRow the starting row of the Queen.&#10;  @param fromCol the starting column of the Queen.&#10;  @param toRow the target row for the Queen.&#10;  @param toCol the target column for the Queen.&#10;  @param board the current state of the chessboard represented as a 2D array of Pieces.&#10;  @param movethe last move made on the board, though not required for the Queen's movement.&#10;  @return true if the move is valid, false otherwise.&#10; "
+	fontcolor=darkgreen
+];
+} 
+} 
+
+'edges    
+Game2211858XXXisStalemate0 -> Piece77109966XXXcanMove1163750345;
+Game2211858XXXmain1859653459 -> Game2211858XXXisStalemate0;
+Piece77109966XXXcanMove1163750345 -> Bishop1990023133XXXcanMove1163750345;
+Piece77109966XXXcanMove1163750345 -> King2338743XXXcanMove1163750345;
+Piece77109966XXXcanMove1163750345 -> Knight2042963283XXXcanMove1163750345;
+Piece77109966XXXcanMove1163750345 -> Pawn2480296XXXcanMove1163750345;
+Piece77109966XXXcanMove1163750345 -> Queen78391050XXXcanMove1163750345;
+Piece77109966XXXcanMove1163750345 -> Rook2553081XXXcanMove1163750345;
+    
+}
+@enduml

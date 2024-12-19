@@ -1,3 +1,7 @@
+package Pieces;
+
+import Utilities.*;
+
 import javax.swing.*;
 import java.io.File;
 
@@ -9,32 +13,32 @@ import java.io.File;
 ///
 /// @author Team 57
 /// @version 1.0
-abstract class Piece {
+public abstract class Piece {
     /**
      * The name of the chess piece (e.g., "Pawn", "Rook", "King").
      */
-    protected String name;
+    public String name;
 
     /**
      * The color of the chess piece, either "White" or "Black".
      */
-    protected String color;
+    public String color;
 
     /**
      * The visual icon representing the piece, loaded from an image file.
      */
-    protected ImageIcon icon;
+    public ImageIcon icon;
 
     /**
      * Flag to indicate if the piece has moved during the game.
      * Useful for special moves like castling or pawn's first move.
      */
-    protected boolean haveMove = false;
+    public boolean haveMove = false;
 
     /**
      * Base path for loading piece icons, constructed using the user's directory.
      */
-    protected static String basePath = System.getProperty("user.dir") + File.separator + "assets" + File.separator;
+    protected static String basePath = "assets" + File.separator;
 
     /// Constructor for creating a chess piece with a name and color.
     /// Initializes the piece's name, color, and loads its corresponding icon image.
@@ -58,16 +62,6 @@ abstract class Piece {
         return icon;
     }
 
-    /// Handles piece promotion for pieces that can transform (typically pawns).
-    /// This method is intentionally left empty in the base class and should be
-    /// overridden by specific piece implementations if needed.
-    ///
-    /// @param board The current state of the chessboard
-    /// @param row The row where the promotion occurs
-    /// @param col The column where the promotion occurs
-    /// @param promoteTo The type of piece to promote to
-    public void promote(Piece[][] board, int row, int col, String promoteTo){}
-
     /// Abstract method to validate if a piece can move from one position to another.
     /// Each specific piece type (Pawn, Rook, Knight, etc.) must implement its own
     /// movement rules by overriding this method.
@@ -77,9 +71,13 @@ abstract class Piece {
     /// @param toRow The destination row of the move
     /// @param toCol The destination column of the move
     /// @param board The current state of the chessboard
-    /// @param move The move being attempted
     /// @return true if the move is valid, false otherwise
-    public abstract boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board, Move move);
+
+    public abstract boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board);
+
+    public boolean canMove(int fromRow, int fromCol, int toRow, int toCol, Piece[][] board, Move move) {
+        return this.canMove(fromRow, fromCol, toRow, toCol, board);
+    }
 
     /// Creates and returns the initial setup of a standard chess board.
     /// Positions all pieces in their starting locations for a new chess game:
