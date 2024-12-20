@@ -464,14 +464,12 @@ public class Game extends JFrame{
                     break;
             }
             moves.getLast().promoteTo = selectedOption;
-            board.removeSquare(row, col);
-            board.addSquare(row, col, boardState[row][col].getIcon());
         } else {
             boardState[row][col] = new Queen(boardState[row][col].color);
             moves.getLast().promoteTo = "Queen";
-            board.removeSquare(row, col);
-            board.addSquare(row, col, boardState[row][col].getIcon());
         }
+        board.removeSquare(row, col);
+        board.addSquare(row, col, boardState[row][col].getIcon());
     }
 
     public void highlightCheck() {
