@@ -193,6 +193,7 @@ public class Game extends JFrame{
                             System.exit(0);
                         }
                     });
+                    break;
                 } else if (board.whiteTimeRemaining <= 0 || board.blackTimeRemaining <= 0) {
                     EventQueue.invokeLater(() -> {
                         ai.cancel(true);
@@ -217,6 +218,7 @@ public class Game extends JFrame{
                             System.exit(0);
                         }
                     });
+                    break;
                 }
                 try {
                     //noinspection BusyWait
@@ -283,7 +285,7 @@ public class Game extends JFrame{
         player2.setColor(player1.getColor().equals("White") ? "Black" : "White");
         if (player2.getColor().equals("White")) {
             String aiColor = currentPlayer.getColor();
-            ai = new AIPlayer(currentPlayer.getColor().equals("White"), this, aiColor, moves.getLast().timers[aiColor.equals("White")?0:1]);
+            ai = new AIPlayer(currentPlayer.getColor().equals("White"), this, aiColor);
             ai.execute();
         }
 
@@ -420,7 +422,7 @@ public class Game extends JFrame{
         }
         if (currentPlayer instanceof AI_Minimax && !AIPlayer.isThinking()) {
             String aiColor = currentPlayer.getColor();
-            ai = new AIPlayer(currentPlayer.getColor().equals("White"), this, aiColor,moves.getLast().timers[aiColor.equals("White")?0:1]);
+            ai = new AIPlayer(currentPlayer.getColor().equals("White"), this, aiColor);
             ai.execute();
         }
 

@@ -15,12 +15,11 @@ public class AIPlayer extends SwingWorker<Move, Void> {
     private static volatile boolean isProcessing = false;
     private final String aiColor; // Store the AI's color when move calculation started
 
-    public AIPlayer(boolean isMaximizingPlayer, Game game, String aiColor, int time) {
+    public AIPlayer(boolean isMaximizingPlayer, Game game, String aiColor) {
         this.moves = new ArrayList<>(game.moves);
         this.isMaximizingPlayer = isMaximizingPlayer;
         this.game = game;
         this.aiColor = aiColor;
-        AI_Minimax.startTimeout(time* 97L);
         game.board.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
     }
 
@@ -35,7 +34,7 @@ public class AIPlayer extends SwingWorker<Move, Void> {
         }
         isProcessing = true;
         if (isCancelled())
-            return null;
+            AI_Minimax.isTimeRemaining = false;
         return AI_Minimax.getBestMove(moves, 3, isMaximizingPlayer);
     }
 

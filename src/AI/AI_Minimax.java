@@ -6,9 +6,6 @@ import Utilities.Player;
 
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class AI_Minimax extends Player {
     // Evaluation constants for piece values
@@ -25,6 +22,9 @@ public class AI_Minimax extends Player {
 
     // Depth constants
     private static final int MAX_DEPTH = 5;
+
+    //Time remaining from Game class
+    public static boolean isTimeRemaining = true;
 
     // Pieces.Piece-square tables for positional evaluation
     private static final int[][] PAWN_TABLE = {
@@ -60,15 +60,6 @@ public class AI_Minimax extends Player {
             {-50, -30, -10,   0,   0, -10, -30, -50},
     };
 
-    private static final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-
-    // Method to start the timeout
-    public static void startTimeout(long timeoutMillis) {
-        executorService.schedule(() -> {
-        }, timeoutMillis, TimeUnit.MILLISECONDS);
-    }
-
-
     /**
      * Improved minimax algorithm with better checkmate detection
      */
@@ -85,7 +76,7 @@ public class AI_Minimax extends Player {
         }
 
         // Base case: reached maximum depth or game-ending condition
-        if (depth == 0 || isGameOver(moves, isMaximizingPlayer)) {
+        if (depth == 0 || isGameOver(moves, isMaximizingPlayer) || !isTimeRemaining) {
             bestMove.eval = quiescenceSearch(moves, alpha, beta, isMaximizingPlayer);
             return bestMove;
         }
