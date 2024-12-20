@@ -73,6 +73,8 @@ public class AIPlayer extends SwingWorker<Move, Void> {
                         if ((move.toRow == 0 && move.piece.color.equals("White")) || (move.toRow == 7 && move.piece.color.equals("Black"))) {
                             game.boardState[move.toRow][move.toCol] = new Queen(move.piece.color);
                             game.moves.getLast().promoteTo = "Queen";
+                            game.board.removeSquare(move.toRow, move.toCol);
+                            game.board.addSquare(move.toRow, move.toCol, game.boardState[move.toRow][move.toCol].getIcon());
                             game.movesToStalemate = 0;
                         } else {
                             game.movesToStalemate++;
