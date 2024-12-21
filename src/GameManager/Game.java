@@ -237,7 +237,7 @@ public class Game extends JFrame{
     private void startGame() {
         Path path = Paths.get("lastSave.txt");
         if (Files.exists(path)) {
-            int choice = JOptionPane.showConfirmDialog(this, "A saved game was found. Do you want to continue?", "Continue From Last GameManager.Game", JOptionPane.YES_NO_OPTION);
+            int choice = JOptionPane.showConfirmDialog(this, "A saved game was found. Do you want to continue?", "Continue From Last Game", JOptionPane.YES_NO_OPTION);
             if (choice == JOptionPane.YES_OPTION) {
                 restoreMovesFromFile();
             } else {
@@ -298,7 +298,11 @@ public class Game extends JFrame{
             timerDuration = 10; // Default timer duration
         }
 
-        currentPlayer = player1;
+        currentPlayer = player1.getColor().equals("White") ? player1 : player2;
+        if (currentPlayer instanceof AI_Minimax) {
+            ai = new AIPlayer(true, this, "White");
+            ai.execute();
+        }
     }
 
     /**
@@ -369,7 +373,7 @@ public class Game extends JFrame{
      * @param row The row index of the clicked square.
      * @param col The column index of the clicked square.
      */
-    protected void handleClick(int row, int col) {
+    private void handleClick(int row, int col) {
         board.clearHighlights();
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
@@ -512,7 +516,7 @@ public class Game extends JFrame{
         int[] position = color.equals("White") ? whiteKingPosition : blackKingPosition;
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                if (Pieces[i][j] != null && !Pieces[i][j].color.equals(Pieces[position[0]][position[1]].color) && Pieces[i][j].canMove(i, j, position[0], position[1], Pieces,(!moves.isEmpty() && moves.getLast() != null) ? moves.getLast() : new Move(position[0], position[1], i, j, Pieces[position[0]][position[1]], null, timerDuration, timerDuration))) {
+                if (Pieces[i][j] != null && !Pieces[i][j].color.equals(Pieces[position[0]][position[1]].color) && Pieces[i][j].canMove(i, j, position[0], position[1], Pieces)) {
                     return true;
                 }
             }
