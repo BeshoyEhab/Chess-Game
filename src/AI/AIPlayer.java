@@ -62,6 +62,8 @@ public class AIPlayer extends SwingWorker<Move, Void> {
                     Piece[][] boardState = game.boardState;
                     move.piece = boardState[move.fromRow][move.fromCol];
                     move.capturedPiece = boardState[move.toRow][move.toCol];
+                    move.timers[0] = game.board.whiteTimeRemaining;
+                    move.timers[1] = game.board.blackTimeRemaining;
                     move.haveMoved = true;
 
                     // Make the move

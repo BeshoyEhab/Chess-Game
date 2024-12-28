@@ -1,74 +1,57 @@
-# Chess GameManager.Game
 
-A fully functional chess game built in Java, featuring all the standard rules of chess and a graphical user interface (GUI).
+# Chess Game
+
+A complete chess game implemented in Java, featuring a graphical user interface (GUI) and support for all standard chess rules.
 
 ## Features
 
-- Supports two-player gameplay on the same machine.
-- Implements standard chess rules, including:
-  - Pieces.Pawn promotion
+- Local two-player mode.
+- Full adherence to chess rules:
+  - Pawn promotion
   - Castling
   - En passant
-  - Check and checkmate detection
-- Graphical representation of the board and pieces using custom assets.
-- Highlights possible moves for selected pieces.
+  - Check and checkmate validation
+- Interactive GUI with highlighted possible moves.
+- Custom-designed chess piece assets.
 
 ## Requirements
 
-- Java Development Kit (JDK) 8 or higher.
+- Java Development Kit (JDK) 8 or later.
 
-## Setup and Running the GameManager.Game
+## How to Run
 
-1. **Clone the repository**:
+1. **Clone the Repository**  
+   Clone the project to your local machine using Git:  
+
    ```bash
    git clone https://github.com/BeshoyEhab/Chess-Game
    cd Chess-Game
    ```
 
-2. **Compile the source code**:
+2. **Compile the Source Code**  
+   Use the following command to compile the Java source files:  
+
    ```bash
-   javac -d out/production/Chess-GameManager.Game src/*.java
+   javac -d out/production/Chess-Game src/*.java
    ```
 
-3. **Run the game**:
+3. **Start the Game**  
+   Run the compiled program to launch the chess game:  
+
    ```bash
-   java -cp out/production/Chess-GameManager.Game GameManager.Game
+   java -cp out/production/Chess-Game Game
    ```
 
-## Directory Structure
+## Project Structure
 
 ```
-Chess-GameManager.Game/
-├── src/                # Source code files
-├── assets/             # Images of chess pieces
-├── out/                # Compiled Java classes
-├── .idea/              # IntelliJ IDEA project files
-└── README.md           # Project documentation
+Chess-Game/
+├── src/                # Java source files
+├── assets/             # Chess piece images and other graphical resources
+├── README.md           # Project documentation
+└── LICENSE             # License information
 ```
-
-## How to Play
-
-1. Run the game using the instructions above.
-2. The chessboard GUI will appear.
-3. Players take turns to move their pieces by clicking on them and selecting valid moves.
-4. The game ends when one player checkmates the other.
-
-## Contributing
-
-Contributions are welcome! To contribute:
-
-1. Fork the repository.
-2. Create a feature branch: `git checkout -b feature-name`.
-3. Commit your changes: `git commit -m 'Add feature-name'`.
-4. Push to the branch: `git push origin feature-name`.
-5. Open a pull request.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Chess piece images sourced from the project assets.
-- Built using Java and designed for learning and entertainment purposes.
-
+This project is distributed under the MIT License. Refer to the [LICENSE](LICENSE) file for more details.
