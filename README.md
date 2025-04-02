@@ -1,4 +1,3 @@
-
 # Chess Game
 
 A complete chess game implemented in Java, featuring a graphical user interface (GUI) and support for all standard chess rules.
@@ -21,7 +20,7 @@ A complete chess game implemented in Java, featuring a graphical user interface 
 ## How to Run
 
 1. **Clone the Repository**  
-   Clone the project to your local machine using Git:  
+   Clone the project to your local machine using Git:
 
    ```bash
    git clone https://github.com/BeshoyEhab/Chess-Game
@@ -29,17 +28,17 @@ A complete chess game implemented in Java, featuring a graphical user interface 
    ```
 
 2. **Compile the Source Code**  
-   Use the following command to compile the Java source files:  
+   Use the following command to compile the Java source files:
 
    ```bash
-   javac -d out/production/Chess-Game src/*.java
+   javac -d out/production/Chess-Game src/**.java
    ```
 
 3. **Start the Game**  
-   Run the compiled program to launch the chess game:  
+   Run the compiled program to launch the chess game:
 
    ```bash
-   java -cp out/production/Chess-Game Game
+   java -cp out/production/Chess-Game Main
    ```
 
 ## Project Structure

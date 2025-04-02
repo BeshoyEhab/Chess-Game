@@ -196,7 +196,8 @@ public class Game extends JFrame{
                     break;
                 } else if (board.whiteTimeRemaining <= 0 || board.blackTimeRemaining <= 0) {
                     EventQueue.invokeLater(() -> {
-                        ai.cancel(true);
+                        if (ai != null)
+                            ai.cancel(true);
                         Path path = Paths.get("lastSave.txt");
                         try {
                             Files.deleteIfExists(path);
