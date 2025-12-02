@@ -4,29 +4,50 @@ import Pieces.Piece;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
-/// A graphical chess board implementation using Java Swing that manages
-/// the visual board, player timers, and game state.
+/// A graphical chess board implementation using Java Swing that manages the
+/// visual board, player timers, and game state.
 ///
-/// This class provides a comprehensive chess board interface with features including:
+/// This class provides a comprehensive chess board interface with features
+/// including:
 ///
-///  - 8x8 grid representation of the chess board
+/// - 8x8 grid representation of the chess board
 ///
-///  - Player time tracking with countdown timers
+/// - Player time tracking with countdown timers
 ///
-///  - Captured pieces display
+/// - Captured pieces display
 ///
-///  - Visual board manipulation methods
+/// - Visual board manipulation methods
 ///
 /// @author Team 57
 /// @version 1.0
 /// @since 2024-12-15
 public class ChessBoard extends JFrame {
+    public interface MoveListener {
+        void onMove(int fromRow, int fromCol, int toRow, int toCol);
+
+        void onDragStart(int row, int col);
+
+        void onDragEnd();
+    }
+
     /**
-     * Panel for displaying right-side game components like timers and captured pieces.
-     * Uses a GridLayout with 6 rows to organize components vertically.
+     * Panel for displaying right-side game components like timers and captured
+     * pieces.
+     * Uses a GridBagLayout to organize components vertically with proper spacing.
      */
-    public JPanel rightPanel = new JPanel(new GridLayout(6, 1));
+    public JPanel rightPanel = new JPanel(new GridBagLayout());
+    public JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 10, 0)); // Add gap between buttons
+    public JButton undoButton = new JButton("Undo");
+    public JButton restartButton = new JButton("Restart");
+    public JLabel player1Label = new JLabel("Player 1", SwingConstants.CENTER);
+    public JLabel player2Label = new JLabel("Player 2", SwingConstants.CENTER);
+    private Point lastMoveStart;
+    private Point lastMoveEnd;
+    private static final Color LAST_MOVE_START_COLOR = new Color(255, 255, 0, 100);
+    private static final Color LAST_MOVE_END_COLOR = new Color(255, 165, 0, 100);
 
     /**
      * Tracks the remaining time for the White player in deciseconds.
@@ -85,8 +106,8 @@ public class ChessBoard extends JFrame {
     /**
      * Constructs a new ChessBoard with custom configuration.
      *
-     * @param dims Array containing board width and height in pixels
-     * @param color Background color for alternating board squares
+     * @param dims    Array containing board width and height in pixels
+     * @param color   Background color for alternating board squares
      * @param minutes Total game time allocated for each player in minutes
      */
     public ChessBoard(int[] dims, Color color, int minutes) {
@@ -135,10 +156,14 @@ public class ChessBoard extends JFrame {
         JPanel downIndexes = new JPanel();
         board.setLayout(new BorderLayout());
         downIndexes.setLayout(new BoxLayout(downIndexes, BoxLayout.X_AXIS));
-        board.setPreferredSize(new Dimension(dims[0], dims[1]));
-        rowLabels.setPreferredSize(new Dimension(dims[0]/40, dims[1]));
-        colLabels.setPreferredSize(new Dimension(dims[0], dims[1]/40));
-        space.setPreferredSize(new Dimension(dims[0]/40, dims[1]/40));
+
+        // Force board panel to be square
+        boardPanel.setPreferredSize(new Dimension(dims[0], dims[0]));
+
+        board.setPreferredSize(new Dimension(dims[0] + dims[0] / 40, dims[0] + dims[0] / 40));
+        rowLabels.setPreferredSize(new Dimension(dims[0] / 40, dims[0]));
+        colLabels.setPreferredSize(new Dimension(dims[0], dims[0] / 40));
+        space.setPreferredSize(new Dimension(dims[0] / 40, dims[0] / 40));
 
         downIndexes.add(space);
         downIndexes.add(colLabels);
@@ -146,10 +171,72 @@ public class ChessBoard extends JFrame {
         blackTimerLabel.setFont(new Font("Arial", Font.BOLD, 10));
         whiteTimerLabel.setFont(new Font("Arial", Font.BOLD, 20));
 
-        rightPanel.add(blackCapturedPanel);
-        rightPanel.add(blackTimerLabel);
-        rightPanel.add(whiteTimerLabel);
-        rightPanel.add(whiteCapturedPanel);
+        // Configure right panel layout
+        rightPanel.setPreferredSize(new Dimension(250, dims[0])); // Match board height, wider panel
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL; // Only fill horizontally
+        gbc.weightx = 1.0;
+        gbc.weighty = 0.0; // Do not stretch vertically by default
+        gbc.insets = new Insets(10, 10, 5, 10); // Add padding
+
+        // Player 2 Name (Top)
+        player2Label.setFont(new Font("Arial", Font.BOLD, 20));
+        rightPanel.add(player2Label, gbc);
+
+        // Black Captured Pieces
+        gbc.gridy++;
+        rightPanel.add(blackCapturedPanel, gbc);
+
+        // Black Timer
+        gbc.gridy++;
+        gbc.insets = new Insets(5, 10, 10, 10);
+        rightPanel.add(blackTimerLabel, gbc);
+
+        // Spacer (pushes content to top/bottom)
+        gbc.gridy++;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        rightPanel.add(Box.createVerticalGlue(), gbc);
+
+        // Buttons
+        gbc.gridy++;
+        gbc.weighty = 0.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(10, 10, 10, 10);
+        rightPanel.add(buttonPanel, gbc);
+
+        // Spacer
+        gbc.gridy++;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        rightPanel.add(Box.createVerticalGlue(), gbc);
+
+        // White Timer
+        gbc.gridy++;
+        gbc.weighty = 0.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(10, 10, 5, 10);
+        rightPanel.add(whiteTimerLabel, gbc);
+
+        // White Captured Pieces
+        gbc.gridy++;
+        gbc.insets = new Insets(5, 10, 10, 10);
+        rightPanel.add(whiteCapturedPanel, gbc);
+
+        // Player 1 Name (Bottom)
+        gbc.gridy++;
+        gbc.insets = new Insets(5, 10, 10, 10);
+        player1Label.setFont(new Font("Arial", Font.BOLD, 20));
+        rightPanel.add(player1Label, gbc);
+
+        buttonPanel.add(undoButton);
+        buttonPanel.add(restartButton);
+
+        // Make buttons smaller
+        undoButton.setPreferredSize(new Dimension(80, 40));
+        restartButton.setPreferredSize(new Dimension(80, 40));
 
         // Initialize timers
         initTimers();
@@ -164,11 +251,9 @@ public class ChessBoard extends JFrame {
     }
 
     /// Initializes game timers for both players with countdown and time-out logic.
-    /// The White player's timer starts first by default.
-    /// Timer behavior:
-    /// - Countdown occurs every decisecond
-    /// - Displays a message when a player runs out of time
-    /// - Stops the corresponding player's timer upon time exhaustion
+    /// The White player's timer starts first by default. Timer behavior: - Countdown
+    /// occurs every decisecond - Displays a message when a player runs out of time -
+    /// Stops the corresponding player's timer upon time exhaustion
     private void initTimers() {
         whiteTimer = new Timer(100, e -> {
             if (whiteTimeRemaining > 0) {
@@ -195,7 +280,7 @@ public class ChessBoard extends JFrame {
      * Updates a timer label with a formatted time display.
      * Converts deciseconds into a minutes:seconds.tenths format.
      *
-     * @param label JLabel to be updated with the current time
+     * @param label         JLabel to be updated with the current time
      * @param timeInSeconds Remaining time in deciseconds
      */
     private void updateTimerLabel(JLabel label, int timeInSeconds) {
@@ -206,13 +291,25 @@ public class ChessBoard extends JFrame {
         label.setText(String.format("%02d:%02d.%d", minutes, seconds, hundredths));
     }
 
+    public void updateWhiteTimer(int timeRemaining) {
+        whiteTimeRemaining = timeRemaining;
+        updateTimerLabel(whiteTimerLabel, whiteTimeRemaining);
+    }
+
+    public void updateBlackTimer(int timeRemaining) {
+        blackTimeRemaining = timeRemaining;
+        updateTimerLabel(blackTimerLabel, blackTimeRemaining);
+    }
+
     /**
      * Creates a chess board square with alternating colors.
-     * Squares are colored white or the specified custom color based on their position.
+     * Squares are colored white or the specified custom color based on their
+     * position.
      *
      * @param i Row index of the square
      * @param j Column index of the square
-     * @return A JPanel representing a chess board square with appropriate background
+     * @return A JPanel representing a chess board square with appropriate
+     *         background
      */
     private JPanel setSquare(int i, int j) {
         JPanel square = new JPanel(new BorderLayout());
@@ -237,8 +334,8 @@ public class ChessBoard extends JFrame {
      * Adds a dot marker to a specified board square.
      * Useful for highlighting possible moves or indicating special squares.
      *
-     * @param row Row index of the target square
-     * @param col Column index of the target square
+     * @param row   Row index of the target square
+     * @param col   Column index of the target square
      * @param color Color of the dot to be displayed
      */
     public void addDot(int row, int col, Color color) {
@@ -252,8 +349,8 @@ public class ChessBoard extends JFrame {
     /**
      * Removes a dot from a square and optionally replaces it with a piece.
      *
-     * @param row Row index of the square
-     * @param col Column index of the square
+     * @param row   Row index of the square
+     * @param col   Column index of the square
      * @param piece Piece to be placed after dot removal (can be null)
      */
     public void removeDot(int row, int col, Piece piece) {
@@ -275,13 +372,14 @@ public class ChessBoard extends JFrame {
 
     /**
      * Moves a piece from one square to another on the board.
-     * Removes the piece from the source square and places it in the destination square.
+     * Removes the piece from the source square and places it in the destination
+     * square.
      *
      * @param fromRow Source square's row index
      * @param fromCol Source square's column index
-     * @param toRow Destination square's row index
-     * @param toCol Destination square's column index
-     * @param icon ImageIcon representing the piece being moved
+     * @param toRow   Destination square's row index
+     * @param toCol   Destination square's column index
+     * @param icon    ImageIcon representing the piece being moved
      */
     public void moveSquare(int fromRow, int fromCol, int toRow, int toCol, ImageIcon icon) {
         removeSquare(toRow, toCol);
@@ -292,8 +390,8 @@ public class ChessBoard extends JFrame {
     /**
      * Adds a piece to a specific square on the board.
      *
-     * @param row Row index of the square
-     * @param col Column index of the square
+     * @param row  Row index of the square
+     * @param col  Column index of the square
      * @param icon Piece's icon to be displayed
      */
     public void addSquare(int row, int col, ImageIcon icon) {
@@ -306,8 +404,8 @@ public class ChessBoard extends JFrame {
     /**
      * Highlights a specific square with a given color.
      *
-     * @param row Row index of the square
-     * @param col Column index of the square
+     * @param row   Row index of the square
+     * @param col   Column index of the square
      * @param color Highlight color
      */
     public void highlightSquare(int row, int col, Color color) {
@@ -321,6 +419,115 @@ public class ChessBoard extends JFrame {
         for (int i = 0; i < BOARD_SIZE; i++) {
             for (int j = 0; j < BOARD_SIZE; j++) {
                 squares[i][j].setBackground((i + j) % 2 == 0 ? Color.WHITE : this.color);
+            }
+        }
+        if (lastMoveStart != null && lastMoveEnd != null) {
+            highlightSquare(lastMoveStart.x, lastMoveStart.y, LAST_MOVE_START_COLOR);
+            highlightSquare(lastMoveEnd.x, lastMoveEnd.y, LAST_MOVE_END_COLOR);
+        }
+    }
+
+    public void setLastMove(int r1, int c1, int r2, int c2) {
+        lastMoveStart = new Point(r1, c1);
+        lastMoveEnd = new Point(r2, c2);
+    }
+
+    public void addUndoListener(java.awt.event.ActionListener l) {
+        undoButton.addActionListener(l);
+    }
+
+    public void addRestartListener(java.awt.event.ActionListener l) {
+        restartButton.addActionListener(l);
+    }
+
+    public void enableDragAndDrop(MoveListener listener) {
+        MouseAdapter dragAdapter = new MouseAdapter() {
+            private JLabel dragLabel;
+            private JLabel sourceLabel;
+            private int dragStartRow = -1;
+            private int dragStartCol = -1;
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                JPanel square = (JPanel) e.getSource();
+                for (int i = 0; i < BOARD_SIZE; i++) {
+                    for (int j = 0; j < BOARD_SIZE; j++) {
+                        if (squares[i][j] == square) {
+                            dragStartRow = i;
+                            dragStartCol = j;
+                            break;
+                        }
+                    }
+                }
+                if (square.getComponentCount() > 0 && square.getComponent(0) instanceof JLabel) {
+                    sourceLabel = (JLabel) square.getComponent(0);
+                    sourceLabel.setVisible(false); // Hide original
+
+                    dragLabel = new JLabel(sourceLabel.getIcon());
+                    dragLabel.setSize(square.getSize());
+                    Point p = SwingUtilities.convertPoint(square, e.getPoint(), getLayeredPane());
+                    dragLabel.setLocation(p.x - dragLabel.getWidth() / 2, p.y - dragLabel.getHeight() / 2);
+                    getLayeredPane().add(dragLabel, JLayeredPane.DRAG_LAYER);
+
+                    // Notify listener that drag has started
+                    listener.onDragStart(dragStartRow, dragStartCol);
+                }
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (dragLabel != null) {
+                    Point p = SwingUtilities.convertPoint((Component) e.getSource(), e.getPoint(), getLayeredPane());
+                    dragLabel.setLocation(p.x - dragLabel.getWidth() / 2, p.y - dragLabel.getHeight() / 2);
+                    repaint();
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (sourceLabel != null) {
+                    sourceLabel.setVisible(true); // Show original (will be removed if move valid)
+                    sourceLabel = null;
+                }
+
+                if (dragLabel != null) {
+                    getLayeredPane().remove(dragLabel);
+                    dragLabel = null;
+
+                    // Notify listener that drag has ended
+                    listener.onDragEnd();
+
+                    repaint();
+
+                    Point p = SwingUtilities.convertPoint((Component) e.getSource(), e.getPoint(), getContentPane());
+                    Component c = getContentPane().findComponentAt(p);
+
+                    // findComponentAt might return the labels inside the square, so we need to find
+                    // the square panel
+                    if (c instanceof JLabel) {
+                        c = c.getParent();
+                    }
+
+                    if (c instanceof JPanel) {
+                        for (int i = 0; i < BOARD_SIZE; i++) {
+                            for (int j = 0; j < BOARD_SIZE; j++) {
+                                if (squares[i][j] == c) {
+                                    if (i != dragStartRow || j != dragStartCol) {
+                                        listener.onMove(dragStartRow, dragStartCol, i, j);
+                                    }
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            for (int j = 0; j < BOARD_SIZE; j++) {
+                squares[i][j].addMouseListener(dragAdapter);
+                squares[i][j].addMouseMotionListener(dragAdapter);
             }
         }
     }
@@ -351,5 +558,10 @@ public class ChessBoard extends JFrame {
                 rightPanel.getComponent(i).setForeground(Color.BLACK);
             }
         }
+    }
+
+    public void setPlayerNames(String p1, String p2) {
+        player1Label.setText(p1);
+        player2Label.setText(p2);
     }
 }
